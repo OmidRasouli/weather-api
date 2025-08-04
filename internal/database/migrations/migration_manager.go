@@ -11,7 +11,7 @@ import (
 
 // TODO
 // migration command
-// migrate create -ext sql -dir db/migrations -seq create_users_table
+// migrate create -ext sql -dir internal/database/migrations -seq create_weather_table
 
 type DBInstance interface {
 	DB() (*sql.DB, error)
