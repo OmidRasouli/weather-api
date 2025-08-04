@@ -6,9 +6,9 @@
 package configs
 
 import (
-	"log"
 	"os"
 
+	"github.com/OmidRasouli/weather-api/pkg/logger"
 	"gopkg.in/yaml.v3"
 )
 
@@ -17,7 +17,9 @@ var GlobalConfig *Config
 // Config is the main configuration struct that holds all app settings.
 // It is populated from the YAML config file.
 type Config struct {
-	Server ServerConfig `yaml:"server"` // Server-related settings (e.g., port)
+	Server      ServerConfig      `yaml:"server"`      // Server-related settings (e.g., port)
+	Database    DatabaseConfig    `yaml:"database"`    // Database connection settings
+	OpenWeather OpenWeatherConfig `yaml:"openweather"` // OpenWeather API settings
 	// Add other configuration sections here as needed, e.g.:
 	// Database DatabaseConfig `yaml:"database"`
 	// OpenWeather OpenWeatherConfig `yaml:"openweather"`
@@ -70,7 +72,7 @@ func MustLoad(path string) *Config {
 	}
 	cfg, err := loadConfig(path)
 	if err != nil {
-		log.Fatalf("failed to load config from %s: %v", path, err)
+		logger.Fatalf("failed to load config from %s: %v", path, err)
 	}
 	GlobalConfig = cfg
 	return cfg
@@ -80,4 +82,12 @@ func MustLoad(path string) *Config {
 // Use this to access server-related settings such as the HTTP port.
 func (c *Config) GetServerConfig() ServerConfig {
 	return c.Server
+}
+
+func (c *Config) GetDatabaseConfig() DatabaseConfig {
+	return c.Database
+}
+
+func (c *Config) GetOpenWeatherConfig() OpenWeatherConfig {
+	return c.OpenWeather
 }
