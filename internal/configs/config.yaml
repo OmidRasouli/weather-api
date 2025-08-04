@@ -10,4 +10,4 @@ database:
   sslmode: disable
 
 openweather:
-  apiKey: xyz
+  apiKey: 5f04aa5b2ea22ee1ace84ff200dddf40
