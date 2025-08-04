@@ -3,17 +3,17 @@ package weather
 import (
 	"context"
 
+	"github.com/OmidRasouli/weather-api/infrastructure/database"
 	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
 	"github.com/OmidRasouli/weather-api/internal/domain/weather"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type WeatherPostgresRepository struct {
-	db *gorm.DB
+	db database.Database
 }
 
-func NewWeatherPostgresRepository(db *gorm.DB) interfaces.WeatherRepository {
+func NewWeatherPostgresRepository(db database.Database) interfaces.WeatherRepository {
 	return &WeatherPostgresRepository{db: db}
 }
 func (r *WeatherPostgresRepository) Save(ctx context.Context, w *weather.Weather) error {
