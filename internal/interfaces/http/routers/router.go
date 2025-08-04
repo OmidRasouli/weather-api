@@ -1,11 +1,12 @@
 package router
 
 import (
+	"github.com/OmidRasouli/weather-api/internal/interfaces/http/controller"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-func Setup() *gin.Engine {
+func Setup(weatherController *controller.WeatherController) *gin.Engine {
 	router := gin.Default()
 
 	// Add CORS middleware to allow cross-origin requests (useful for frontend integration).
@@ -15,6 +16,8 @@ func Setup() *gin.Engine {
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
+
+	router.POST("/weather", weatherController.FetchAndStore)
 
 	return router
 }
