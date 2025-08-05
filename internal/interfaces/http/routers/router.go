@@ -19,7 +19,10 @@ func Setup(weatherController *controller.WeatherController) *gin.Engine {
 
 	router.POST("/weather", weatherController.FetchAndStore)
 	router.GET("/weather", weatherController.GetAll)
-	router.GET("/weather/:city", weatherController.GetByCity)
+	router.GET("/weather/:id", weatherController.GetByID)                      // NEW
+	router.PUT("/weather/:id", weatherController.Update)                       // NEW
+	router.DELETE("/weather/:id", weatherController.Delete)                    // NEW
+	router.GET("/weather/latest/:cityName", weatherController.GetLatestByCity) // NEW
 
 	return router
 }

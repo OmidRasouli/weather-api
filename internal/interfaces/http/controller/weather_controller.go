@@ -14,6 +14,9 @@ type WeatherServicer interface {
 	FetchAndStoreWeather(ctx context.Context, city, country string) (*weather.Weather, error)
 	GetLatestWeatherByCity(ctx context.Context, city string) (*weather.Weather, error)
 	GetAllWeather(ctx context.Context) ([]*weather.Weather, error)
+	GetWeatherByID(ctx context.Context, id string) (*weather.Weather, error)
+	UpdateWeather(ctx context.Context, id string, update *weather.Weather) (*weather.Weather, error)
+	DeleteWeather(ctx context.Context, id string) error
 }
 
 type WeatherController struct {
@@ -70,5 +73,49 @@ func (wc *WeatherController) GetAll(c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusOK, result)
+}
+
+func (wc *WeatherController) GetByID(c *gin.Context) {
+	id := c.Param("id")
+	result, err := wc.service.GetWeatherByID(c, id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "weather data not found"})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func (wc *WeatherController) Update(c *gin.Context) {
+	id := c.Param("id")
+	var req weather.Weather
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+	result, err := wc.service.UpdateWeather(c, id, &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func (wc *WeatherController) Delete(c *gin.Context) {
+	id := c.Param("id")
+	if err := wc.service.DeleteWeather(c, id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "weather record deleted"})
+}
+
+func (wc *WeatherController) GetLatestByCity(c *gin.Context) {
+	city := c.Param("cityName")
+	result, err := wc.service.GetLatestWeatherByCity(c, city)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "weather data not found"})
+		return
+	}
 	c.JSON(http.StatusOK, result)
 }
