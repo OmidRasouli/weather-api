@@ -53,9 +53,10 @@ func RunDatabase(cfg *configs.Config) database.Database {
 	}
 
 	// Create a new migration instance for managing database migrations.
-	migrationInstance, err := databaseMigration.NewMigrateInstance(db, "db/migrations", cfg.GetDatabaseConfig().DBName)
+	migrationInstance, err := databaseMigration.NewMigrateInstance(db, "/internal/database/migrations", cfg.GetDatabaseConfig().DBName)
 	if err != nil {
 		logger.Errorf("failed to create migration instance: %v", err)
+		return db // Prevent further migration logic if migration instance creation fails
 	}
 
 	// Initialize the MigrationManager with the database connection and migration instance.

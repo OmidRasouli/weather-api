@@ -3,20 +3,29 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/OmidRasouli/weather-api/pkg/logger"
-	"github.com/golang-migrate/migrate"
-	"github.com/golang-migrate/migrate/database/postgres"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/golang-migrate/migrate/v4/source/go_bindata"
 )
 
 // TODO
 // migration command
 // migrate create -ext sql -dir internal/database/migrations -seq create_weather_table
 
+// DBInstance defines the database connection interface required for migrations.
+// Any type implementing this interface can be used for database migrations.
 type DBInstance interface {
 	DB() (*sql.DB, error)
 }
 
+// Migration defines the interface for database migration operations.
+// It provides methods to apply, rollback, and check migration status.
 type Migration interface {
 	Up() error
 	Steps(int) error
@@ -39,13 +48,50 @@ func NewMigrationManager(db DBInstance, migrations Migration) *MigrationManager 
 func NewMigrateInstance(db DBInstance, migrationsPath string, dbname string) (Migration, error) {
 	sqlDB, err := db.DB()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get SQL DB: %w", err)
 	}
+
 	driver, err := postgres.WithInstance(sqlDB, &postgres.Config{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create postgres driver: %w", err)
+	}
+
+	// Resolve migrations path to an absolute path
+	absPath, err := resolveMigrationsPath(migrationsPath)
 	if err != nil {
 		return nil, err
 	}
-	return migrate.NewWithDatabaseInstance("file://"+migrationsPath, dbname, driver)
+
+	// Format for migrate library (file:// protocol)
+	sourceURL := "file://" + filepath.ToSlash(absPath)
+	logger.Debugf("Using migrations at: %s", sourceURL)
+
+	return migrate.NewWithDatabaseInstance(sourceURL, dbname, driver)
+}
+
+// resolveMigrationsPath converts a relative or absolute path to a valid migrations directory
+func resolveMigrationsPath(path string) (string, error) {
+	// Clean the path (remove double slashes, etc.)
+	path = strings.TrimPrefix(path, "/")
+
+	// Get absolute path if relative
+	if !filepath.IsAbs(path) {
+		workDir, err := os.Getwd()
+		if err != nil {
+			return "", fmt.Errorf("failed to get working directory: %w", err)
+		}
+		path = filepath.Join(workDir, path)
+	}
+
+	// Verify directory exists or create it
+	if stat, err := os.Stat(path); err != nil || !stat.IsDir() {
+		logger.Infof("Creating migrations directory: %s", path)
+		if err := os.MkdirAll(path, 0755); err != nil {
+			return "", fmt.Errorf("failed to create migrations directory: %w", err)
+		}
+	}
+
+	return path, nil
 }
 
 // RunMigrations applies all pending migrations to the database.
