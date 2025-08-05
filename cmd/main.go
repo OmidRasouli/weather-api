@@ -16,6 +16,7 @@ import (
 )
 
 func main() {
+	logger.InitLogger()
 	logger.Info("The application is starting...")
 	cfg := configs.MustLoad("config/config.yaml")
 	db := RunDatabase(cfg)
