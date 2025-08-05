@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/OmidRasouli/weather-api/internal/domain/weather"
+	"github.com/OmidRasouli/weather-api/pkg/errors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -37,13 +38,13 @@ type FetchWeatherRequest struct {
 func (wc *WeatherController) FetchAndStore(c *gin.Context) {
 	var req FetchWeatherRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		_ = c.Error(errors.NewBadRequest("Invalid request body", err))
 		return
 	}
 
 	result, err := wc.service.FetchAndStoreWeather(c, req.City, req.Country)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(errors.NewExternalAPIError("Failed to fetch weather data", err, http.StatusInternalServerError))
 		return
 	}
 
@@ -53,13 +54,13 @@ func (wc *WeatherController) FetchAndStore(c *gin.Context) {
 func (wc *WeatherController) GetByCity(c *gin.Context) {
 	city := c.Param("city")
 	if city == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "city is required"})
+		_ = c.Error(errors.NewBadRequest("City name is required", nil))
 		return
 	}
 
 	result, err := wc.service.GetLatestWeatherByCity(c, city)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "weather data not found"})
+		_ = c.Error(errors.NewNotFound("Weather data not found for the city", err))
 		return
 	}
 
@@ -69,7 +70,7 @@ func (wc *WeatherController) GetByCity(c *gin.Context) {
 func (wc *WeatherController) GetAll(c *gin.Context) {
 	result, err := wc.service.GetAllWeather(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch weather records"})
+		_ = c.Error(errors.NewInternalServerError("Failed to fetch weather records", err))
 		return
 	}
 
@@ -80,7 +81,7 @@ func (wc *WeatherController) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	result, err := wc.service.GetWeatherByID(c, id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "weather data not found"})
+		_ = c.Error(errors.NewNotFound("Weather data not found", err))
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -95,7 +96,7 @@ func (wc *WeatherController) Update(c *gin.Context) {
 	}
 	result, err := wc.service.UpdateWeather(c, id, &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(errors.NewInternalServerError("Failed to update weather data", err))
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -104,17 +105,17 @@ func (wc *WeatherController) Update(c *gin.Context) {
 func (wc *WeatherController) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if err := wc.service.DeleteWeather(c, id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		_ = c.Error(errors.NewInternalServerError("Failed to delete weather record", err))
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "weather record deleted"})
+	c.JSON(http.StatusOK, gin.H{"message": "Weather record deleted"})
 }
 
 func (wc *WeatherController) GetLatestByCity(c *gin.Context) {
 	city := c.Param("city")
 	result, err := wc.service.GetLatestWeatherByCity(c, city)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "weather data not found"})
+		_ = c.Error(errors.NewNotFound("Weather data not found for the city", err))
 		return
 	}
 	c.JSON(http.StatusOK, result)
