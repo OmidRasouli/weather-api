@@ -83,6 +83,45 @@ func TestFetchAndStoreWeather_Success(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
+// TestFetchAndStoreWeather_MappingValidation ensures all fields from API response are mapped to the domain model
+func TestFetchAndStoreWeather_MappingValidation(t *testing.T) {
+	mockRepo := new(MockWeatherRepository)
+	mockAPI := new(MockAPIClient)
+	service := NewWeatherService(mockRepo, mockAPI)
+
+	ctx := context.TODO()
+	apiResp := &interfaces.WeatherAPIResponse{
+		Temperature: 12.3,
+		Description: "rainy",
+		Humidity:    88,
+		WindSpeed:   7.2,
+		FetchedAt:   time.Now(),
+	}
+
+	mockAPI.On("FetchWeatherData", ctx, "berlin", "DE").Return(apiResp, nil)
+
+	var savedWeather *weather.Weather
+	mockRepo.On("Save", ctx, mock.AnythingOfType("*weather.Weather")).Return(nil).Run(func(args mock.Arguments) {
+		savedWeather = args.Get(1).(*weather.Weather)
+	})
+
+	result, err := service.FetchAndStoreWeather(ctx, "berlin", "DE")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.NotNil(t, savedWeather)
+	assert.Equal(t, "berlin", savedWeather.CityName)
+	assert.Equal(t, "DE", savedWeather.Country)
+	assert.Equal(t, apiResp.Temperature, savedWeather.Temperature)
+	assert.Equal(t, apiResp.Description, savedWeather.Description)
+	assert.Equal(t, apiResp.Humidity, savedWeather.Humidity)
+	assert.Equal(t, apiResp.WindSpeed, savedWeather.WindSpeed)
+	assert.WithinDuration(t, apiResp.FetchedAt, savedWeather.FetchedAt, time.Second)
+
+	mockAPI.AssertExpectations(t)
+	mockRepo.AssertExpectations(t)
+}
+
 // TestFetchAndStoreWeather_APIError tests the behavior when the weather API returns an error
 func TestFetchAndStoreWeather_APIError(t *testing.T) {
 	mockRepo := new(MockWeatherRepository)
@@ -103,4 +142,33 @@ func TestFetchAndStoreWeather_APIError(t *testing.T) {
 
 	mockAPI.AssertExpectations(t)
 	mockRepo.AssertNotCalled(t, "Save") // Verify repository
+}
+
+// TestFetchAndStoreWeather_RepositoryError tests the behavior when the repository save returns an error
+func TestFetchAndStoreWeather_RepositoryError(t *testing.T) {
+	mockRepo := new(MockWeatherRepository)
+	mockAPI := new(MockAPIClient)
+	service := NewWeatherService(mockRepo, mockAPI)
+
+	ctx := context.TODO()
+	apiResp := &interfaces.WeatherAPIResponse{
+		Temperature: 25.0,
+		Description: "cloudy",
+		Humidity:    50,
+		WindSpeed:   3.0,
+		FetchedAt:   time.Now(),
+	}
+	repoErr := fmt.Errorf("database error")
+
+	mockAPI.On("FetchWeatherData", ctx, "tehran", "IR").Return(apiResp, nil)
+	mockRepo.On("Save", ctx, mock.AnythingOfType("*weather.Weather")).Return(repoErr)
+
+	result, err := service.FetchAndStoreWeather(ctx, "tehran", "IR")
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "database error")
+
+	mockAPI.AssertExpectations(t)
+	mockRepo.AssertExpectations(t)
 }
