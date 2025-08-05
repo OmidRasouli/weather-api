@@ -1,17 +1,28 @@
 package controller
 
 import (
+	"context"
 	"net/http"
 
-	"github.com/OmidRasouli/weather-api/internal/application/services"
+	"github.com/OmidRasouli/weather-api/internal/domain/weather"
 	"github.com/gin-gonic/gin"
 )
 
-type WeatherController struct {
-	service *services.WeatherService
+// WeatherServicer defines the interface for weather service operations.
+// This interface decouples the controller from the concrete service implementation.
+type WeatherServicer interface {
+	FetchAndStoreWeather(ctx context.Context, city, country string) (*weather.Weather, error)
+	GetLatestWeatherByCity(ctx context.Context, city string) (*weather.Weather, error)
+	GetAllWeather(ctx context.Context) ([]*weather.Weather, error)
 }
 
-func NewWeatherController(service *services.WeatherService) *WeatherController {
+type WeatherController struct {
+	service WeatherServicer
+}
+
+// NewWeatherController creates a new weather controller with the provided service.
+// Using the interface instead of the concrete type enables better testability and flexibility.
+func NewWeatherController(service WeatherServicer) *WeatherController {
 	return &WeatherController{service: service}
 }
 
