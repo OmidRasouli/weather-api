@@ -48,3 +48,11 @@ func (s *WeatherService) FetchAndStoreWeather(ctx context.Context, city string, 
 
 	return entity, nil
 }
+
+func (s *WeatherService) GetLatestWeatherByCity(ctx context.Context, city string) (*weather.Weather, error) {
+	return s.repo.FindLatestByCity(ctx, city)
+}
+
+func (s *WeatherService) GetAllWeather(ctx context.Context) ([]*weather.Weather, error) {
+	return s.repo.FindAll(ctx)
+}

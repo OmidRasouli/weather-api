@@ -18,6 +18,8 @@ func Setup(weatherController *controller.WeatherController) *gin.Engine {
 	})
 
 	router.POST("/weather", weatherController.FetchAndStore)
+	router.GET("/weather", weatherController.GetAll)
+	router.GET("/weather/:city", weatherController.GetByCity)
 
 	return router
 }

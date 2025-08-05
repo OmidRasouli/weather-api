@@ -35,3 +35,29 @@ func (wc *WeatherController) FetchAndStore(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+func (wc *WeatherController) GetByCity(c *gin.Context) {
+	city := c.Param("city")
+	if city == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "city is required"})
+		return
+	}
+
+	result, err := wc.service.GetLatestWeatherByCity(c, city)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "weather data not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+func (wc *WeatherController) GetAll(c *gin.Context) {
+	result, err := wc.service.GetAllWeather(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch weather records"})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
