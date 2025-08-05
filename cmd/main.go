@@ -18,18 +18,18 @@ import (
 func main() {
 	logger.InitLogger()
 	logger.Info("The application is starting...")
-	cfg := configs.MustLoad("internal/configs/config.yaml")
+	cfg := configs.MustLoad()
 	db := RunDatabase(cfg)
 	RunServer(cfg, db)
 }
 
 func RunServer(cfg *configs.Config, db database.Database) {
 	weatherRepo := postgresRepo.NewWeatherPostgresRepository(db)
-	apiClient := openweather.NewClient(cfg.GetOpenWeatherConfig().APIKey)
+	apiClient := openweather.NewClient(cfg.OpenWeather.APIKey)
 	weatherService := services.NewWeatherService(weatherRepo, apiClient)
 	weatherController := controller.NewWeatherController(weatherService)
 	r := router.Setup(weatherController)
-	port := cfg.GetServerConfig().Port
+	port := cfg.Server.Port
 	addr := ":" + strconv.Itoa(port)
 	logger.Infof("Server is starting on port %d", port)
 
@@ -41,19 +41,19 @@ func RunServer(cfg *configs.Config, db database.Database) {
 func RunDatabase(cfg *configs.Config) database.Database {
 	// Create a new database connection using the configuration values.
 	db, err := postgres.NewPostgresConnection(postgres.PostgresConfig{
-		Host:     cfg.GetDatabaseConfig().Host,
-		Port:     strconv.Itoa(cfg.GetDatabaseConfig().Port),
-		User:     cfg.GetDatabaseConfig().User,
-		Password: cfg.GetDatabaseConfig().Password,
-		DBName:   cfg.GetDatabaseConfig().DBName,
-		SSLMode:  cfg.GetDatabaseConfig().SSLMode,
+		Host:     cfg.Database.Host,
+		Port:     strconv.Itoa(cfg.Database.Port),
+		User:     cfg.Database.User,
+		Password: cfg.Database.Password,
+		DBName:   cfg.Database.DBName,
+		SSLMode:  cfg.Database.SSLMode,
 	})
 	if err != nil {
 		logger.Errorf("failed to connect to postgres: %v", err)
 	}
 
 	// Create a new migration instance for managing database migrations.
-	migrationInstance, err := databaseMigration.NewMigrateInstance(db, "/internal/database/migrations", cfg.GetDatabaseConfig().DBName)
+	migrationInstance, err := databaseMigration.NewMigrateInstance(db, "/internal/database/migrations", cfg.Database.DBName)
 	if err != nil {
 		logger.Errorf("failed to create migration instance: %v", err)
 		return db // Prevent further migration logic if migration instance creation fails

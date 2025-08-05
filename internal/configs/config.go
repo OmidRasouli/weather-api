@@ -1,93 +1,59 @@
 // config.go
-// Provides configuration loading and access for the VOD Streamer educational project.
-// This file defines the structure of the configuration, loads it from a YAML file,
-// and exposes helper methods to access different configuration sections.
+// Contains core configuration structures
 
-package configs
+package configs // Change to singular for package name - more idiomatic Go
 
-import (
-	"os"
-
-	"github.com/OmidRasouli/weather-api/pkg/logger"
-	"gopkg.in/yaml.v3"
-)
-
-var GlobalConfig *Config
+var global *Config // Lowercase for package-level variable
 
 // Config is the main configuration struct that holds all app settings.
-// It is populated from the YAML config file.
+// It is populated from the environment variables.
 type Config struct {
-	Server      ServerConfig      `yaml:"server"`      // Server-related settings (e.g., port)
-	Database    DatabaseConfig    `yaml:"database"`    // Database connection settings
-	OpenWeather OpenWeatherConfig `yaml:"openweather"` // OpenWeather API settings
-	// Add other configuration sections here as needed, e.g.:
-	// Database DatabaseConfig `yaml:"database"`
-	// OpenWeather OpenWeatherConfig `yaml:"openweather"`
+	Server      ServerConfig      // Server-related settings (e.g., port)
+	Database    DatabaseConfig    // Database connection settings
+	OpenWeather OpenWeatherConfig // OpenWeather API settings
 }
 
 // ServerConfig holds HTTP server configuration.
 type ServerConfig struct {
-	Port int `yaml:"port"` // Port on which the HTTP server will listen
+	Port int // Port on which the HTTP server will listen
 }
 
 // DatabaseConfig holds the configuration for connecting to a database.
 // It includes host, port, user credentials, database name, and SSL mode.
 type DatabaseConfig struct {
-	Host     string `yaml:"host"`     // Database host address
-	Port     int    `yaml:"port"`     // Database port
-	User     string `yaml:"user"`     // Username for database authentication
-	Password string `yaml:"password"` // Password for database authentication
-	DBName   string `yaml:"dbname"`   // Name of the database to connect to
-	SSLMode  string `yaml:"sslmode"`  // SSL mode (e.g., disable, require)
+	Host     string // Database host address
+	Port     int    // Database port
+	User     string // Username for database authentication
+	Password string // Password for database authentication
+	DBName   string // Name of the database to connect to
+	SSLMode  string // SSL mode (e.g., disable, require)
 }
 
 // OpenWeatherConfig holds the configuration for accessing the OpenWeather API.
 // It includes the API key required for authentication.
 type OpenWeatherConfig struct {
-	APIKey string `yaml:"apiKey"` // API key for OpenWeather service
+	APIKey string // API key for OpenWeather service
 }
 
-// loadConfig reads and parses the YAML configuration file at the given path.
-// Returns a Config struct or an error if loading fails.
-func loadConfig(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, err
-	}
-
-	return &cfg, nil
-}
-
-// MustLoad loads the configuration and panics if there is any error.
-// Useful for ensuring the app never starts with invalid or missing config.
-// It caches the loaded configuration in GlobalConfig for reuse.
-func MustLoad(path string) *Config {
-	if GlobalConfig != nil {
-		return GlobalConfig
-	}
-	cfg, err := loadConfig(path)
-	if err != nil {
-		logger.Fatalf("failed to load config from %s: %v", path, err)
-	}
-	GlobalConfig = cfg
-	return cfg
-}
-
-// GetServerConfig returns the server section of the config.
-// Use this to access server-related settings such as the HTTP port.
-func (c *Config) GetServerConfig() ServerConfig {
+// Access methods - in idiomatic Go, we'd typically not use "Get" prefixes
+func (c *Config) GetServer() ServerConfig {
 	return c.Server
 }
 
-func (c *Config) GetDatabaseConfig() DatabaseConfig {
+func (c *Config) GetDatabase() DatabaseConfig {
 	return c.Database
 }
 
-func (c *Config) GetOpenWeatherConfig() OpenWeatherConfig {
+func (c *Config) GetOpenWeather() OpenWeatherConfig {
 	return c.OpenWeather
+}
+
+// Global returns the singleton config instance
+func Global() *Config {
+	return global
+}
+
+// SetGlobal sets the global configuration instance
+func SetGlobal(cfg *Config) {
+	global = cfg
 }
