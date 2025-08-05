@@ -18,3 +18,7 @@ type weatherModel struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
+
+func (weatherModel) TableName() string {
+	return "weather"
+}
