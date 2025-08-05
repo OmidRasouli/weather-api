@@ -7,6 +7,7 @@ import (
 	"github.com/OmidRasouli/weather-api/internal/domain/weather"
 	"github.com/OmidRasouli/weather-api/pkg/errors"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 // WeatherServicer defines the interface for weather service operations.
@@ -31,13 +32,31 @@ func NewWeatherController(service WeatherServicer) *WeatherController {
 }
 
 type FetchWeatherRequest struct {
-	City    string `json:"city" binding:"required"`
-	Country string `json:"country" binding:"required"`
+	City    string `json:"city" binding:"required,min=1"`
+	Country string `json:"country" binding:"required,country"`
+}
+
+type UpdateWeatherRequest struct {
+	City        string  `json:"city" binding:"required,min=1"`
+	Country     string  `json:"country" binding:"required,country"`
+	Temperature float64 `json:"temperature"`
+	Humidity    int     `json:"humidity" binding:"gte=0,lte=100"`
+	WindSpeed   float64 `json:"windSpeed" binding:"gte=0"`
+	Description string  `json:"description"`
 }
 
 func (wc *WeatherController) FetchAndStore(c *gin.Context) {
 	var req FetchWeatherRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		validationErrors, ok := err.(validator.ValidationErrors)
+		if ok {
+			details := make(map[string]string)
+			for _, e := range validationErrors {
+				details[e.Field()] = e.Error()
+			}
+			_ = c.Error(errors.ValidationError("Invalid request data", details))
+			return
+		}
 		_ = c.Error(errors.NewBadRequest("Invalid request body", err))
 		return
 	}
@@ -89,12 +108,32 @@ func (wc *WeatherController) GetByID(c *gin.Context) {
 
 func (wc *WeatherController) Update(c *gin.Context) {
 	id := c.Param("id")
-	var req weather.Weather
+	var req UpdateWeatherRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		validationErrors, ok := err.(validator.ValidationErrors)
+		if ok {
+			details := make(map[string]string)
+			for _, e := range validationErrors {
+				details[e.Field()] = e.Error()
+			}
+			_ = c.Error(errors.ValidationError("Invalid request data", details))
+			return
+		}
+		_ = c.Error(errors.NewBadRequest("Invalid request body", err))
 		return
 	}
-	result, err := wc.service.UpdateWeather(c, id, &req)
+
+	// Convert the request to a domain model
+	update := &weather.Weather{
+		City:        req.City,
+		Country:     req.Country,
+		Temperature: req.Temperature,
+		Humidity:    req.Humidity,
+		WindSpeed:   req.WindSpeed,
+		Description: req.Description,
+	}
+
+	result, err := wc.service.UpdateWeather(c, id, update)
 	if err != nil {
 		_ = c.Error(errors.NewInternalServerError("Failed to update weather data", err))
 		return
