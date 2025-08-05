@@ -13,6 +13,7 @@ import (
 	"github.com/OmidRasouli/weather-api/internal/interfaces/http/controller"
 	router "github.com/OmidRasouli/weather-api/internal/interfaces/http/routers"
 	"github.com/OmidRasouli/weather-api/pkg/logger"
+	"github.com/OmidRasouli/weather-api/pkg/validator"
 )
 
 func main() {
@@ -21,6 +22,9 @@ func main() {
 	cfg := configs.MustLoad()
 	db := RunDatabase(cfg)
 	RunServer(cfg, db)
+
+	// Initialize validator with custom validations
+	validator.Initialize()
 }
 
 func RunServer(cfg *configs.Config, db database.Database) {
