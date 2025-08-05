@@ -60,3 +60,40 @@ func (s *WeatherService) GetAllWeather(ctx context.Context) ([]*weather.Weather,
 func (s *WeatherService) GetWeatherByID(ctx context.Context, id string) (*weather.Weather, error) {
 	return s.repo.FindByID(ctx, id)
 }
+
+func (s *WeatherService) UpdateWeather(ctx context.Context, id string, update *weather.Weather) (*weather.Weather, error) {
+	existing, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if update.CityName != "" {
+		existing.CityName = update.CityName
+	}
+	if update.Country != "" {
+		existing.Country = update.Country
+	}
+	if update.Temperature != 0 {
+		existing.Temperature = update.Temperature
+	}
+	if update.Description != "" {
+		existing.Description = update.Description
+	}
+	if update.Humidity != 0 {
+		existing.Humidity = update.Humidity
+	}
+	if update.WindSpeed != 0 {
+		existing.WindSpeed = update.WindSpeed
+	}
+	existing.UpdatedAt = s.timeSource()
+
+	if err := s.repo.Update(ctx, existing); err != nil {
+		return nil, err
+	}
+
+	return existing, nil
+}
+
+func (s *WeatherService) DeleteWeather(ctx context.Context, id string) error {
+	return s.repo.Delete(ctx, id)
+}
