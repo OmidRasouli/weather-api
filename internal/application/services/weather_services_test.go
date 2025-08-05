@@ -76,7 +76,7 @@ func TestFetchAndStoreWeather_Success(t *testing.T) {
 	result, err := service.FetchAndStoreWeather(ctx, "tehran", "IR")
 
 	assert.NoError(t, err)
-	assert.Equal(t, "tehran", result.CityName)
+	assert.Equal(t, "tehran", result.City)
 	assert.Equal(t, "IR", result.Country)
 
 	mockAPI.AssertExpectations(t)
@@ -110,7 +110,7 @@ func TestFetchAndStoreWeather_MappingValidation(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.NotNil(t, savedWeather)
-	assert.Equal(t, "berlin", savedWeather.CityName)
+	assert.Equal(t, "berlin", savedWeather.City)
 	assert.Equal(t, "DE", savedWeather.Country)
 	assert.Equal(t, apiResp.Temperature, savedWeather.Temperature)
 	assert.Equal(t, apiResp.Description, savedWeather.Description)
@@ -182,7 +182,7 @@ func TestGetWeatherByID_Success(t *testing.T) {
 	id := uuid.New()
 	expected := &weather.Weather{
 		ID:          id,
-		CityName:    "tehran",
+		City:        "tehran",
 		Country:     "IR",
 		Temperature: 30.5,
 		Description: "sunny",
@@ -198,7 +198,7 @@ func TestGetWeatherByID_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected.ID, result.ID)
-	assert.Equal(t, expected.CityName, result.CityName)
+	assert.Equal(t, expected.City, result.City)
 	assert.Equal(t, expected.Country, result.Country)
 	mockRepo.AssertExpectations(t)
 }

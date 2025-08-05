@@ -111,7 +111,7 @@ func (wc *WeatherController) Delete(c *gin.Context) {
 }
 
 func (wc *WeatherController) GetLatestByCity(c *gin.Context) {
-	city := c.Param("cityName")
+	city := c.Param("city")
 	result, err := wc.service.GetLatestWeatherByCity(c, city)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "weather data not found"})

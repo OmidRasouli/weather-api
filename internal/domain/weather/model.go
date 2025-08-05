@@ -8,7 +8,7 @@ import (
 
 type Weather struct {
 	ID          uuid.UUID
-	CityName    string
+	City        string
 	Country     string
 	Temperature float64
 	Description string

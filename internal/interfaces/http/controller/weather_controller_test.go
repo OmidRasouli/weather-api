@@ -62,7 +62,7 @@ func TestFetchAndStore_Success(t *testing.T) {
 	c.Request.Header.Set("Content-Type", "application/json")
 
 	expected := &weather.Weather{
-		CityName:    "tehran",
+		City:        "tehran",
 		Country:     "IR",
 		Temperature: 32.5,
 		Humidity:    60,
@@ -89,7 +89,7 @@ func TestGetByID_Success(t *testing.T) {
 	c.Params = gin.Params{{Key: "id", Value: "test-id"}}
 
 	expected := &weather.Weather{
-		CityName:    "tehran",
+		City:        "tehran",
 		Country:     "IR",
 		Temperature: 32.5,
 		Humidity:    60,
@@ -115,12 +115,12 @@ func TestUpdate_Success(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Params = gin.Params{{Key: "id", Value: "test-id"}}
 
-	reqBody := `{"cityName":"tehran","country":"IR","temperature":33.0,"humidity":65,"description":"few clouds","windSpeed":2.5}`
+	reqBody := `{"City":"tehran","country":"IR","temperature":33.0,"humidity":65,"description":"few clouds","windSpeed":2.5}`
 	c.Request = httptest.NewRequest("PUT", "/weather/test-id", strings.NewReader(reqBody))
 	c.Request.Header.Set("Content-Type", "application/json")
 
 	update := &weather.Weather{
-		CityName:    "tehran",
+		City:        "tehran",
 		Country:     "IR",
 		Temperature: 33.0,
 		Humidity:    65,
@@ -162,10 +162,10 @@ func TestGetLatestByCity_Success(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Params = gin.Params{{Key: "cityName", Value: "tehran"}}
+	c.Params = gin.Params{{Key: "City", Value: "tehran"}}
 
 	expected := &weather.Weather{
-		CityName:    "tehran",
+		City:        "tehran",
 		Country:     "IR",
 		Temperature: 32.5,
 		Humidity:    60,

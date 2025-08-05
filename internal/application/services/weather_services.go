@@ -31,7 +31,7 @@ func (s *WeatherService) FetchAndStoreWeather(ctx context.Context, city string, 
 
 	entity := &weather.Weather{
 		ID:          uuid.New(),
-		CityName:    city,
+		City:        city,
 		Country:     country,
 		Temperature: apiData.Temperature,
 		Description: apiData.Description,
@@ -67,8 +67,8 @@ func (s *WeatherService) UpdateWeather(ctx context.Context, id string, update *w
 		return nil, err
 	}
 
-	if update.CityName != "" {
-		existing.CityName = update.CityName
+	if update.City != "" {
+		existing.City = update.City
 	}
 	if update.Country != "" {
 		existing.Country = update.Country

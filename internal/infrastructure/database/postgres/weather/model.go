@@ -8,7 +8,7 @@ import (
 
 type weatherModel struct {
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
-	CityName    string
+	City        string
 	Country     string
 	Temperature float64
 	Description string

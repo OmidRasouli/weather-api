@@ -6,7 +6,7 @@ import "github.com/OmidRasouli/weather-api/internal/domain/weather"
 func toDBModel(w *weather.Weather) *weatherModel {
 	return &weatherModel{
 		ID:          w.ID,
-		CityName:    w.CityName,
+		City:        w.City,
 		Country:     w.Country,
 		Temperature: w.Temperature,
 		Description: w.Description,
@@ -22,7 +22,7 @@ func toDBModel(w *weather.Weather) *weatherModel {
 func toDomainModel(m *weatherModel) *weather.Weather {
 	return &weather.Weather{
 		ID:          m.ID,
-		CityName:    m.CityName,
+		City:        m.City,
 		Country:     m.Country,
 		Temperature: m.Temperature,
 		Description: m.Description,
