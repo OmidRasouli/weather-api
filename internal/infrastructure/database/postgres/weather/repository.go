@@ -6,7 +6,6 @@ import (
 	"github.com/OmidRasouli/weather-api/infrastructure/database"
 	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
 	"github.com/OmidRasouli/weather-api/internal/domain/weather"
-	"github.com/google/uuid"
 )
 
 type WeatherPostgresRepository struct {
@@ -20,13 +19,12 @@ func (r *WeatherPostgresRepository) Save(ctx context.Context, w *weather.Weather
 	return r.db.WithContext(ctx).Create(toDBModel(w)).Error
 }
 
-func (r *WeatherPostgresRepository) FindByID(ctx context.Context, id uuid.UUID) (*weather.Weather, error) {
-	var m weatherModel
-	err := r.db.WithContext(ctx).First(&m, "id = ?", id).Error
-	if err != nil {
+func (r *WeatherPostgresRepository) FindByID(ctx context.Context, id string) (*weather.Weather, error) {
+	var model weatherModel
+	if err := r.db.WithContext(ctx).First(&model, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
-	return toDomainModel(&m), nil
+	return toDomainModel(&model), nil
 }
 
 func (r *WeatherPostgresRepository) FindAll(ctx context.Context) ([]*weather.Weather, error) {
@@ -59,6 +57,6 @@ func (r *WeatherPostgresRepository) Update(ctx context.Context, w *weather.Weath
 	return r.db.WithContext(ctx).Save(toDBModel(w)).Error
 }
 
-func (r *WeatherPostgresRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *WeatherPostgresRepository) Delete(ctx context.Context, id string) error {
 	return r.db.WithContext(ctx).Delete(&weatherModel{}, "id = ?", id).Error
 }

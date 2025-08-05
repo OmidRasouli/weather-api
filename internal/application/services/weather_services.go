@@ -56,3 +56,7 @@ func (s *WeatherService) GetLatestWeatherByCity(ctx context.Context, city string
 func (s *WeatherService) GetAllWeather(ctx context.Context) ([]*weather.Weather, error) {
 	return s.repo.FindAll(ctx)
 }
+
+func (s *WeatherService) GetWeatherByID(ctx context.Context, id string) (*weather.Weather, error) {
+	return s.repo.FindByID(ctx, id)
+}

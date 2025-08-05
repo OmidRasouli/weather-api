@@ -31,7 +31,7 @@ func (m *MockWeatherRepository) Save(ctx context.Context, w *weather.Weather) er
 	return args.Error(0)
 }
 
-func (m *MockWeatherRepository) FindByID(ctx context.Context, id uuid.UUID) (*weather.Weather, error) {
+func (m *MockWeatherRepository) FindByID(ctx context.Context, id string) (*weather.Weather, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(*weather.Weather), args.Error(1)
 }
@@ -51,7 +51,7 @@ func (m *MockWeatherRepository) Update(ctx context.Context, w *weather.Weather) 
 	return args.Error(0)
 }
 
-func (m *MockWeatherRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (m *MockWeatherRepository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
@@ -170,5 +170,52 @@ func TestFetchAndStoreWeather_RepositoryError(t *testing.T) {
 	assert.Contains(t, err.Error(), "database error")
 
 	mockAPI.AssertExpectations(t)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetWeatherByID_Success(t *testing.T) {
+	mockRepo := new(MockWeatherRepository)
+	mockAPI := new(MockAPIClient)
+	service := NewWeatherService(mockRepo, mockAPI)
+
+	ctx := context.TODO()
+	id := uuid.New()
+	expected := &weather.Weather{
+		ID:          id,
+		CityName:    "tehran",
+		Country:     "IR",
+		Temperature: 30.5,
+		Description: "sunny",
+		Humidity:    40,
+		WindSpeed:   5.5,
+		FetchedAt:   time.Now(),
+	}
+
+	mockRepo.On("FindByID", ctx, id).Return(expected, nil)
+
+	result, err := service.GetWeatherByID(ctx, id.String())
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, expected.ID, result.ID)
+	assert.Equal(t, expected.CityName, result.CityName)
+	assert.Equal(t, expected.Country, result.Country)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetWeatherByID_NotFound(t *testing.T) {
+	mockRepo := new(MockWeatherRepository)
+	mockAPI := new(MockAPIClient)
+	service := NewWeatherService(mockRepo, mockAPI)
+
+	ctx := context.TODO()
+	id := uuid.New()
+	mockRepo.On("FindByID", ctx, id).Return((*weather.Weather)(nil), fmt.Errorf("not found"))
+
+	result, err := service.GetWeatherByID(ctx, id.String())
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "not found")
 	mockRepo.AssertExpectations(t)
 }
