@@ -29,8 +29,12 @@ func getCallerInfo() string {
 
 		if !strings.Contains(funcName, "logger") &&
 			!strings.Contains(funcName, "errors") &&
+			!strings.Contains(funcName, "panic") &&
+			!strings.Contains(funcName, "ErrorHandler") &&
 			!strings.Contains(file, "logger") &&
-			!strings.Contains(file, "errors") {
+			!strings.Contains(file, "errors") &&
+			!strings.Contains(file, "panic") &&
+			!strings.Contains(file, "error_handler") {
 
 			absPath, err := filepath.Abs(file)
 			if err == nil {

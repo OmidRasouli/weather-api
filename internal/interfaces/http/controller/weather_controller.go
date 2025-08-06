@@ -33,12 +33,12 @@ func NewWeatherController(service WeatherServicer) *WeatherController {
 
 type FetchWeatherRequest struct {
 	City    string `json:"city" binding:"required,min=1"`
-	Country string `json:"country" binding:"required,country"`
+	Country string `json:"country" binding:"required,min=2,max=3,alpha"`
 }
 
 type UpdateWeatherRequest struct {
 	City        string  `json:"city" binding:"required,min=1"`
-	Country     string  `json:"country" binding:"required,country"`
+	Country     string  `json:"country" binding:"required,min=2,max=3,alpha"`
 	Temperature float64 `json:"temperature"`
 	Humidity    int     `json:"humidity" binding:"gte=0,lte=100"`
 	WindSpeed   float64 `json:"windSpeed" binding:"gte=0"`

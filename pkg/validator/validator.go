@@ -13,11 +13,6 @@ import (
 // Initialize creates and registers custom validators
 func Initialize() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		// Register custom validation tags here
-		if err := v.RegisterValidation("country", validateCountry); err != nil {
-			logger.Fatalf("failed to register 'country' validation: %v", err)
-		}
-
 		// Register a function to get JSON field names instead of struct field names
 		v.RegisterTagNameFunc(func(fld reflect.StructField) string {
 			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
@@ -26,14 +21,9 @@ func Initialize() {
 			}
 			return name
 		})
+	} else {
+		logger.Error("Failed to get validator engine")
 	}
-}
-
-// validateCountry checks if the country code/name is valid
-func validateCountry(fl validator.FieldLevel) bool {
-	// This is a simplified example - in a real app, you'd check against a list of valid countries
-	country := fl.Field().String()
-	return len(country) >= 2 && len(country) <= 56 // Between 2-char code and longest country name
 }
 
 // ValidateRequest validates a struct and returns validation errors in a map
@@ -64,8 +54,8 @@ func validationErrorMessage(err validator.FieldError) string {
 		return "Value must be greater than or equal to " + err.Param()
 	case "max":
 		return "Value must be less than or equal to " + err.Param()
-	case "country":
-		return "Invalid country name or code"
+	case "alpha":
+		return "Value must contain only alphabetic characters"
 	case "oneof":
 		return "Value must be one of: " + err.Param()
 	case "gt":
