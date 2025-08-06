@@ -2,7 +2,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS weather (
     id UUID PRIMARY KEY,
-    city_name TEXT NOT NULL,
+    city TEXT NOT NULL,
     country TEXT NOT NULL,
     temperature DOUBLE PRECISION,
     description TEXT,
