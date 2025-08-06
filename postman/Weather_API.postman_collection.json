@@ -1,0 +1,170 @@
+{
+  "info": {
+    "name": "Weather API",
+    "description": "Collection for testing the Weather API service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Checks",
+      "item": [
+        {
+          "name": "Basic Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Basic health check that returns 200 OK if the service is running"
+          }
+        },
+        {
+          "name": "Readiness Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health/ready",
+              "host": ["{{baseUrl}}"],
+              "path": ["health", "ready"]
+            },
+            "description": "Readiness check that verifies connections to PostgreSQL and Redis"
+          }
+        },
+        {
+          "name": "Liveness Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health/live",
+              "host": ["{{baseUrl}}"],
+              "path": ["health", "live"]
+            },
+            "description": "Liveness check for container orchestration systems like Kubernetes"
+          }
+        }
+      ],
+      "description": "Health check endpoints for monitoring service status"
+    },
+    {
+      "name": "Get All Weather Records",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/weather",
+          "host": ["{{baseUrl}}"],
+          "path": ["weather"]
+        },
+        "description": "Retrieves all weather records from the database"
+      }
+    },
+    {
+      "name": "Get Weather By ID",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/weather/{{weatherId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["weather", "{{weatherId}}"]
+        },
+        "description": "Retrieves a specific weather record by its ID"
+      }
+    },
+    {
+      "name": "Fetch and Store Weather",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/weather",
+          "host": ["{{baseUrl}}"],
+          "path": ["weather"]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"city\": \"London\",\n    \"country\": \"UK\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "description": "Fetches weather data from external API for a city and country, and stores it in the database"
+      }
+    },
+    {
+      "name": "Update Weather",
+      "request": {
+        "method": "PUT",
+        "url": {
+          "raw": "{{baseUrl}}/weather/{{weatherId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["weather", "{{weatherId}}"]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"city\": \"London\",\n    \"country\": \"UK\",\n    \"temperature\": 25.5,\n    \"humidity\": 70,\n    \"windSpeed\": 4.2,\n    \"description\": \"Partly cloudy\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "description": "Updates an existing weather record"
+      }
+    },
+    {
+      "name": "Delete Weather",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/weather/{{weatherId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["weather", "{{weatherId}}"]
+        },
+        "description": "Deletes a weather record"
+      }
+    },
+    {
+      "name": "Get Latest Weather By City",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/weather/latest/{{cityName}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["weather", "latest", "{{cityName}}"]
+        },
+        "description": "Retrieves the most recent weather record for a specific city"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "weatherId",
+      "value": "your-weather-id",
+      "type": "string"
+    },
+    {
+      "key": "cityName",
+      "value": "London",
+      "type": "string"
+    }
+  ]
+}
