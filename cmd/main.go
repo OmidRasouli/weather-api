@@ -44,7 +44,7 @@ func RunServer(cfg *configs.Config, db database.Database, rd database.RedisClien
 	// Pass Redis client to the weather service
 	weatherService := services.NewWeatherService(weatherRepo, apiClient, rd)
 	weatherController := controller.NewWeatherController(weatherService)
-	r := router.Setup(weatherController)
+	r := router.Setup(weatherController, db, rd)
 	port := cfg.Server.Port
 	addr := ":" + strconv.Itoa(port)
 	logger.Infof("Server is starting on port %d", port)
