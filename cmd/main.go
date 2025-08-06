@@ -41,6 +41,8 @@ func RunServer(cfg *configs.Config, db database.Database, rd database.RedisClien
 	weatherRepo := postgresRepo.NewWeatherPostgresRepository(db)
 	apiClient := openweather.NewClient(cfg.GetOpenWeather().APIKey)
 
+	// Pass Redis client to the weather service
+	weatherService := services.NewWeatherService(weatherRepo, apiClient, rd)
 	weatherController := controller.NewWeatherController(weatherService)
 	r := router.Setup(weatherController)
 	port := cfg.Server.Port

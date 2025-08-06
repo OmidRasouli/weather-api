@@ -2,34 +2,54 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/OmidRasouli/weather-api/infrastructure/database"
 	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
 	"github.com/OmidRasouli/weather-api/internal/domain/weather"
+	"github.com/OmidRasouli/weather-api/pkg/logger"
 	"github.com/google/uuid"
 )
 
 type WeatherService struct {
 	repo       interfaces.WeatherRepository
 	apiClient  interfaces.WeatherAPIClient
+	cache      database.RedisClient
 	timeSource func() time.Time // testable clock
 }
 
-func NewWeatherService(repo interfaces.WeatherRepository, api interfaces.WeatherAPIClient) *WeatherService {
+func NewWeatherService(repo interfaces.WeatherRepository, api interfaces.WeatherAPIClient, cache database.RedisClient) *WeatherService {
 	return &WeatherService{
 		repo:       repo,
 		apiClient:  api,
+		cache:      cache,
 		timeSource: time.Now,
 	}
 }
 
+// FetchAndStoreWeather fetches weather data from the API or cache and stores it
 func (s *WeatherService) FetchAndStoreWeather(ctx context.Context, city string, country string) (*weather.Weather, error) {
+	// Create a cache key based on city and country
+	cacheKey := fmt.Sprintf("weather:%s:%s", city, country)
+
+	// Try to get from cache first
+	var weatherData *weather.Weather
+	err := s.cache.Get(ctx, cacheKey, &weatherData)
+	if err == nil {
+		// Cache hit!
+		logger.Infof("Retrieved weather data from cache for %s, %s", city, country)
+		return weatherData, nil
+	}
+
+	// Cache miss, fetch from API
+	logger.Infof("Cache miss for %s, %s. Fetching from API", city, country)
 	apiData, err := s.apiClient.FetchWeatherData(ctx, city, country)
 	if err != nil {
 		return nil, err
 	}
 
-	entity := &weather.Weather{
+	weatherData = &weather.Weather{
 		ID:          uuid.New(),
 		City:        city,
 		Country:     country,
@@ -42,11 +62,18 @@ func (s *WeatherService) FetchAndStoreWeather(ctx context.Context, city string, 
 		UpdatedAt:   s.timeSource(),
 	}
 
-	if err := s.repo.Save(ctx, entity); err != nil {
+	// Store in the database
+	if err := s.repo.Save(ctx, weatherData); err != nil {
 		return nil, err
 	}
 
-	return entity, nil
+	// Store in cache for future requests
+	if err := s.cache.Set(ctx, cacheKey, weatherData); err != nil {
+		// Log the error but don't fail the request
+		logger.Errorf("Failed to cache weather data: %v", err)
+	}
+
+	return weatherData, nil
 }
 
 func (s *WeatherService) GetLatestWeatherByCity(ctx context.Context, city string) (*weather.Weather, error) {
