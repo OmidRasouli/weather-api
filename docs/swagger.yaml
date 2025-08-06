@@ -6,10 +6,23 @@ definitions:
         minLength: 1
         type: string
       country:
+        maxLength: 3
+        minLength: 2
         type: string
     required:
     - city
     - country
+    type: object
+  controller.HealthResponse:
+    properties:
+      components:
+        additionalProperties:
+          type: string
+        type: object
+      status:
+        type: string
+      version:
+        type: string
     type: object
   controller.UpdateWeatherRequest:
     properties:
@@ -17,6 +30,8 @@ definitions:
         minLength: 1
         type: string
       country:
+        maxLength: 3
+        minLength: 2
         type: string
       description:
         type: string
@@ -76,6 +91,49 @@ info:
   title: Weather API
   version: "1.0"
 paths:
+  /health:
+    get:
+      description: Returns 200 OK if the service is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.HealthResponse'
+      summary: Basic health check
+      tags:
+      - health
+  /health/live:
+    get:
+      description: Simple check for container orchestration
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.HealthResponse'
+      summary: Liveness check
+      tags:
+      - health
+  /health/ready:
+    get:
+      description: Verifies connections to PostgreSQL and Redis
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.HealthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/controller.HealthResponse'
+      summary: Readiness check
+      tags:
+      - health
   /weather:
     get:
       description: Retrieves all weather records from the database
@@ -212,6 +270,29 @@ paths:
           schema:
             $ref: '#/definitions/errors.AppError'
       summary: Update weather record
+      tags:
+      - weather
+  /weather/latest/{city}:
+    get:
+      description: Retrieves the latest weather record for a specific city
+      parameters:
+      - description: City name
+        in: path
+        name: city
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/weather.Weather'
+        "404":
+          description: Weather data not found for the city
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      summary: Get latest weather by city
       tags:
       - weather
   /weather/latest/{cityName}:

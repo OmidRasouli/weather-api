@@ -15,6 +15,72 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/health": {
+            "get": {
+                "description": "Returns 200 OK if the service is running",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Basic health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health/live": {
+            "get": {
+                "description": "Simple check for container orchestration",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Liveness check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health/ready": {
+            "get": {
+                "description": "Verifies connections to PostgreSQL and Redis",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Readiness check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.HealthResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/controller.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/weather": {
             "get": {
                 "description": "Retrieves all weather records from the database",
@@ -103,6 +169,41 @@ const docTemplate = `{
                         "type": "string",
                         "description": "City Name",
                         "name": "cityName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/weather.Weather"
+                        }
+                    },
+                    "404": {
+                        "description": "Weather data not found for the city",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    }
+                }
+            }
+        },
+        "/weather/latest/{city}": {
+            "get": {
+                "description": "Retrieves the latest weather record for a specific city",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "weather"
+                ],
+                "summary": "Get latest weather by city",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "City name",
+                        "name": "city",
                         "in": "path",
                         "required": true
                     }
@@ -271,6 +372,25 @@ const docTemplate = `{
                     "minLength": 1
                 },
                 "country": {
+                    "type": "string",
+                    "maxLength": 3,
+                    "minLength": 2
+                }
+            }
+        },
+        "controller.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "components": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "version": {
                     "type": "string"
                 }
             }
@@ -287,7 +407,9 @@ const docTemplate = `{
                     "minLength": 1
                 },
                 "country": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 3,
+                    "minLength": 2
                 },
                 "description": {
                     "type": "string"
