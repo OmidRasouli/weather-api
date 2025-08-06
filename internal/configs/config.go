@@ -11,6 +11,7 @@ type Config struct {
 	Server      ServerConfig      // Server-related settings (e.g., port)
 	Database    DatabaseConfig    // Database connection settings
 	OpenWeather OpenWeatherConfig // OpenWeather API settings
+	Redis       RedisConfig       // Add Redis configuration
 }
 
 // ServerConfig holds HTTP server configuration.
@@ -35,6 +36,15 @@ type OpenWeatherConfig struct {
 	APIKey string // API key for OpenWeather service
 }
 
+// RedisConfig holds configuration for Redis cache
+type RedisConfig struct {
+	Host     string // Redis server host
+	Port     int    // Redis server port
+	Password string // Password for Redis authentication
+	DB       int    // Redis database number
+	TTL      int    // Time-to-live in seconds for cached items
+}
+
 // Access methods - in idiomatic Go, we'd typically not use "Get" prefixes
 func (c *Config) GetServer() ServerConfig {
 	return c.Server
@@ -46,6 +56,10 @@ func (c *Config) GetDatabase() DatabaseConfig {
 
 func (c *Config) GetOpenWeather() OpenWeatherConfig {
 	return c.OpenWeather
+}
+
+func (c *Config) GetRedis() RedisConfig {
+	return c.Redis
 }
 
 // Global returns the singleton config instance

@@ -3,9 +3,10 @@ package main
 import (
 	"strconv"
 
-	_ "github.com/OmidRasouli/weather-api/docs" 
+	_ "github.com/OmidRasouli/weather-api/docs"
 	"github.com/OmidRasouli/weather-api/infrastructure/database"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/postgres"
+	"github.com/OmidRasouli/weather-api/infrastructure/database/redis"
 	"github.com/OmidRasouli/weather-api/internal/application/services"
 	configs "github.com/OmidRasouli/weather-api/internal/configs"
 	databaseMigration "github.com/OmidRasouli/weather-api/internal/database/migrations"
@@ -29,14 +30,14 @@ func main() {
 	logger.InitLogger()
 	logger.Info("The application is starting...")
 	cfg := configs.MustLoad()
-	db := RunDatabase(cfg)
-	RunServer(cfg, db)
+	db, redisClient := RunDatabase(cfg)
+	RunServer(cfg, db, redisClient)
 
 	// Initialize validator with custom validations
 	validator.Initialize()
 }
 
-func RunServer(cfg *configs.Config, db database.Database) {
+func RunServer(cfg *configs.Config, db database.Database, rd database.RedisClient) {
 	weatherRepo := postgresRepo.NewWeatherPostgresRepository(db)
 	apiClient := openweather.NewClient(cfg.GetOpenWeather().APIKey)
 
@@ -54,7 +55,7 @@ func RunServer(cfg *configs.Config, db database.Database) {
 	}
 }
 
-func RunDatabase(cfg *configs.Config) database.Database {
+func RunDatabase(cfg *configs.Config) (database.Database, database.RedisClient) {
 	// Create a new database connection using the configuration values.
 	db, err := postgres.NewPostgresConnection(postgres.PostgresConfig{
 		Host:     cfg.Database.Host,
@@ -68,11 +69,19 @@ func RunDatabase(cfg *configs.Config) database.Database {
 		logger.Errorf("failed to connect to postgres: %v", err)
 	}
 
+	// Initialize Redis client
+	redisClient, err := redis.NewRedisConnection(cfg.GetRedis())
+	if err != nil {
+		logger.Warnf("Failed to connect to Redis: %v. Continuing without caching.", err)
+	} else {
+		defer redisClient.Close()
+	}
+
 	// Create a new migration instance for managing database migrations.
 	migrationInstance, err := databaseMigration.NewMigrateInstance(db, "/internal/database/migrations", cfg.Database.DBName)
 	if err != nil {
 		logger.Errorf("failed to create migration instance: %v", err)
-		return db // Prevent further migration logic if migration instance creation fails
+		return db, redisClient // Prevent further migration logic if migration instance creation fails
 	}
 
 	// Initialize the MigrationManager with the database connection and migration instance.
@@ -83,5 +92,5 @@ func RunDatabase(cfg *configs.Config) database.Database {
 		logger.Errorf("failed to run migrations: %v", err)
 	}
 
-	return db
+	return db, redisClient
 }

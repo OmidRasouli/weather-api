@@ -7,8 +7,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/joho/godotenv"
 	"github.com/OmidRasouli/weather-api/pkg/logger"
+	"github.com/joho/godotenv"
 )
 
 // loadEnvFile loads environment variables from .env file
@@ -82,6 +82,40 @@ func loadConfig() (*Config, error) {
 		logger.Warn("OPENWEATHER_API_KEY not set, API calls will likely fail")
 	}
 
+	// Redis configuration
+	redisPortStr := getEnvOrDefault("REDIS_PORT", "6379")
+	redisPort := 6379 // Default Redis port
+	if redisPortStr != "" {
+		port, err := strconv.Atoi(redisPortStr)
+		if err != nil {
+			logger.Warnf("Invalid REDIS_PORT value: %s, using default: %d", redisPortStr, redisPort)
+		} else {
+			redisPort = port
+		}
+	}
+
+	redisTTLStr := getEnvOrDefault("REDIS_TTL", "600") // 10 minutes default
+	redisTTL := 600
+	if redisTTLStr != "" {
+		ttl, err := strconv.Atoi(redisTTLStr)
+		if err != nil {
+			logger.Warnf("Invalid REDIS_TTL value: %s, using default: %d", redisTTLStr, redisTTL)
+		} else {
+			redisTTL = ttl
+		}
+	}
+
+	redisDB := 0
+	redisDBStr := getEnvOrDefault("REDIS_DB", "0")
+	if redisDBStr != "" {
+		db, err := strconv.Atoi(redisDBStr)
+		if err != nil {
+			logger.Warnf("Invalid REDIS_DB value: %s, using default: %d", redisDBStr, redisDB)
+		} else {
+			redisDB = db
+		}
+	}
+
 	cfg := &Config{
 		Server: ServerConfig{
 			Port: serverPort,
@@ -96,6 +130,13 @@ func loadConfig() (*Config, error) {
 		},
 		OpenWeather: OpenWeatherConfig{
 			APIKey: apiKey,
+		},
+		Redis: RedisConfig{
+			Host:     getEnvOrDefault("REDIS_HOST", "localhost"),
+			Port:     redisPort,
+			Password: getEnvOrDefault("REDIS_PASSWORD", ""),
+			DB:       redisDB,
+			TTL:      redisTTL,
 		},
 	}
 	return cfg, nil
