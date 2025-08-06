@@ -1,0 +1,361 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "A RESTful API for weather data management",
+        "title": "Weather API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/weather": {
+            "get": {
+                "description": "Retrieves all weather records from the database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "weather"
+                ],
+                "summary": "Get all weather records",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/weather.Weather"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to fetch weather records",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Fetches weather data from external API for a city and country, and stores it in the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "weather"
+                ],
+                "summary": "Fetch and store weather data",
+                "parameters": [
+                    {
+                        "description": "City and country information",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.FetchWeatherRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/weather.Weather"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to fetch weather data",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    }
+                }
+            }
+        },
+        "/weather/latest/{cityName}": {
+            "get": {
+                "description": "Retrieves the most recent weather record for a specific city",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "weather"
+                ],
+                "summary": "Get latest weather for a city",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "City Name",
+                        "name": "cityName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/weather.Weather"
+                        }
+                    },
+                    "404": {
+                        "description": "Weather data not found for the city",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    }
+                }
+            }
+        },
+        "/weather/{id}": {
+            "get": {
+                "description": "Retrieves a specific weather record by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "weather"
+                ],
+                "summary": "Get weather by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Weather ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/weather.Weather"
+                        }
+                    },
+                    "404": {
+                        "description": "Weather data not found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing weather record",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "weather"
+                ],
+                "summary": "Update weather record",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Weather ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Weather information to update",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.UpdateWeatherRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/weather.Weather"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request data",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    },
+                    "404": {
+                        "description": "Weather data not found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to update weather data",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a weather record by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "weather"
+                ],
+                "summary": "Delete weather record",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Weather ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Weather record deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Weather data not found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to delete weather record",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "controller.FetchWeatherRequest": {
+            "type": "object",
+            "required": [
+                "city",
+                "country"
+            ],
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "country": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.UpdateWeatherRequest": {
+            "type": "object",
+            "required": [
+                "city",
+                "country"
+            ],
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "country": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "humidity": {
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 0
+                },
+                "temperature": {
+                    "type": "number"
+                },
+                "windSpeed": {
+                    "type": "number",
+                    "minimum": 0
+                }
+            }
+        },
+        "errors.AppError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "details": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "weather.Weather": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "fetchedAt": {
+                    "type": "string"
+                },
+                "humidity": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "temperature": {
+                    "type": "number",
+                    "format": "float64"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "windSpeed": {
+                    "type": "number",
+                    "format": "float64"
+                }
+            }
+        }
+    }
+}

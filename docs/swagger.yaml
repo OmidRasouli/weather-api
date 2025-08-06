@@ -1,0 +1,242 @@
+basePath: /
+definitions:
+  controller.FetchWeatherRequest:
+    properties:
+      city:
+        minLength: 1
+        type: string
+      country:
+        type: string
+    required:
+    - city
+    - country
+    type: object
+  controller.UpdateWeatherRequest:
+    properties:
+      city:
+        minLength: 1
+        type: string
+      country:
+        type: string
+      description:
+        type: string
+      humidity:
+        maximum: 100
+        minimum: 0
+        type: integer
+      temperature:
+        type: number
+      windSpeed:
+        minimum: 0
+        type: number
+    required:
+    - city
+    - country
+    type: object
+  errors.AppError:
+    properties:
+      code:
+        type: integer
+      details:
+        additionalProperties:
+          type: string
+        type: object
+      message:
+        type: string
+    type: object
+  weather.Weather:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      fetchedAt:
+        type: string
+      humidity:
+        type: integer
+      id:
+        type: string
+      temperature:
+        format: float64
+        type: number
+      updatedAt:
+        type: string
+      windSpeed:
+        format: float64
+        type: number
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: A RESTful API for weather data management
+  title: Weather API
+  version: "1.0"
+paths:
+  /weather:
+    get:
+      description: Retrieves all weather records from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/weather.Weather'
+            type: array
+        "500":
+          description: Failed to fetch weather records
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      summary: Get all weather records
+      tags:
+      - weather
+    post:
+      consumes:
+      - application/json
+      description: Fetches weather data from external API for a city and country,
+        and stores it in the database
+      parameters:
+      - description: City and country information
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.FetchWeatherRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/weather.Weather'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "500":
+          description: Failed to fetch weather data
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      summary: Fetch and store weather data
+      tags:
+      - weather
+  /weather/{id}:
+    delete:
+      description: Deletes a weather record by its ID
+      parameters:
+      - description: Weather ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Weather record deleted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Weather data not found
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "500":
+          description: Failed to delete weather record
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      summary: Delete weather record
+      tags:
+      - weather
+    get:
+      description: Retrieves a specific weather record by its ID
+      parameters:
+      - description: Weather ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/weather.Weather'
+        "404":
+          description: Weather data not found
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      summary: Get weather by ID
+      tags:
+      - weather
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing weather record
+      parameters:
+      - description: Weather ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Weather information to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.UpdateWeatherRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/weather.Weather'
+        "400":
+          description: Invalid request data
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "404":
+          description: Weather data not found
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "500":
+          description: Failed to update weather data
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      summary: Update weather record
+      tags:
+      - weather
+  /weather/latest/{cityName}:
+    get:
+      description: Retrieves the most recent weather record for a specific city
+      parameters:
+      - description: City Name
+        in: path
+        name: cityName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/weather.Weather'
+        "404":
+          description: Weather data not found for the city
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      summary: Get latest weather for a city
+      tags:
+      - weather
+schemes:
+- http
+swagger: "2.0"

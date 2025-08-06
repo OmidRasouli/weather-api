@@ -3,6 +3,7 @@ package main
 import (
 	"strconv"
 
+	_ "github.com/OmidRasouli/weather-api/docs" 
 	"github.com/OmidRasouli/weather-api/infrastructure/database"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/postgres"
 	"github.com/OmidRasouli/weather-api/internal/application/services"
@@ -14,8 +15,16 @@ import (
 	router "github.com/OmidRasouli/weather-api/internal/interfaces/http/routers"
 	"github.com/OmidRasouli/weather-api/pkg/logger"
 	"github.com/OmidRasouli/weather-api/pkg/validator"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title           Weather API
+// @version         1.0
+// @description     A RESTful API for weather data management
+// @host            localhost:8080
+// @BasePath        /
+// @schemes         http
 func main() {
 	logger.InitLogger()
 	logger.Info("The application is starting...")
@@ -29,13 +38,16 @@ func main() {
 
 func RunServer(cfg *configs.Config, db database.Database) {
 	weatherRepo := postgresRepo.NewWeatherPostgresRepository(db)
-	apiClient := openweather.NewClient(cfg.OpenWeather.APIKey)
-	weatherService := services.NewWeatherService(weatherRepo, apiClient)
+	apiClient := openweather.NewClient(cfg.GetOpenWeather().APIKey)
+
 	weatherController := controller.NewWeatherController(weatherService)
 	r := router.Setup(weatherController)
 	port := cfg.Server.Port
 	addr := ":" + strconv.Itoa(port)
 	logger.Infof("Server is starting on port %d", port)
+
+	// Add Swagger endpoint
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	if err := r.Run(addr); err != nil {
 		logger.Errorf("failed to start server: %v", err)
