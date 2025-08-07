@@ -13,11 +13,14 @@ import (
 
 // loadEnvFile loads environment variables from .env file
 func loadEnvFile() error {
-	// Look for .env file in the project root or configs directory
+	// Look for .env file in different locations
+	// Docker containers typically have .env at root level
 	locations := []string{
-		".env",
-		"internal/configs/.env",
-		"internal/configs/config.env",
+		".env",                        // Current working directory (Docker default)
+		"/app/.env",                   // If app is in /app directory
+		"/.env",                       // Root of container
+		"internal/configs/.env",       // Local development
+		"internal/configs/config.env", // Alternative local
 	}
 
 	for _, loc := range locations {
@@ -29,6 +32,7 @@ func loadEnvFile() error {
 	}
 
 	// If no .env file is found, log a warning but continue
+	// This is normal in Docker when using docker-compose env_file
 	logger.Warn("No .env file found, using existing environment variables")
 	return nil
 }
@@ -36,9 +40,10 @@ func loadEnvFile() error {
 // loadConfig reads configuration from environment variables.
 // Returns a Config struct or an error if loading fails.
 func loadConfig() (*Config, error) {
-	// First load variables from .env file
+	// First try to load variables from .env file
+	// In Docker, environment variables are usually passed directly
 	if err := loadEnvFile(); err != nil {
-		return nil, err
+		logger.Warnf("Error loading .env file: %v", err)
 	}
 
 	// Server config with default fallback
@@ -139,6 +144,11 @@ func loadConfig() (*Config, error) {
 			TTL:      redisTTL,
 		},
 	}
+
+	// Log loaded configuration (without sensitive data)
+	logger.Infof("Configuration loaded - Server port: %d, DB host: %s, Redis host: %s",
+		cfg.Server.Port, cfg.Database.Host, cfg.Redis.Host)
+
 	return cfg, nil
 }
 
@@ -160,7 +170,9 @@ func MustLoad() *Config {
 func getEnvOrDefault(key, defaultValue string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		logger.Warnf("%s not set, using default: %s", key, defaultValue)
+		if defaultValue != "" {
+			logger.Warnf("%s not set, using default: %s", key, defaultValue)
+		}
 		return defaultValue
 	}
 	return value

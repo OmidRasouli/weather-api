@@ -1,4 +1,4 @@
-![Go Version](https://img.shields.io/badge/go-1.18+-darkgreen)
+![Go Version](https://img.shields.io/badge/go-1.24+-darkgreen)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12+-blue)
 ![License](https://img.shields.io/github/license/your-repo/weather-api)
 
@@ -18,7 +18,7 @@ A RESTful API service for retrieving, storing, and managing weather data from Op
 
 ## Technology Stack
 
-- **Go**: Core programming language (1.18+)
+- **Go**: Core programming language (1.24+)
 - **Gin**: Web framework for routing and middleware
 - **PostgreSQL**: Primary database for storing weather data
 - **Redis**: Caching layer for weather data
@@ -27,7 +27,7 @@ A RESTful API service for retrieving, storing, and managing weather data from Op
 
 ## Prerequisites
 
-- Go 1.18 or higher
+- Go 1.24 or higher
 - PostgreSQL 12 or higher
 - Redis 6 or higher
 - OpenWeatherMap API key (obtain at [OpenWeather](https://openweathermap.org/api))
@@ -68,6 +68,7 @@ REDIS_TTL=600
 
 ### Running the Application
 
+#### Option 1: Local Development
 ```bash
 # Get dependencies
 go mod download
@@ -76,7 +77,63 @@ go mod download
 go run cmd/main.go
 ```
 
+#### Option 2: Docker (Recommended)
+```bash
+# Copy environment file and configure
+cp .env
+# Edit .env and add your OPENWEATHER_API_KEY
+
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f weather-api
+
+# Stop services
+docker-compose down
+```
+
 The server will start on the configured port (default: 8080).
+
+## Docker Setup
+
+### Prerequisites for Docker
+- Docker
+- Docker Compose
+- OpenWeatherMap API key
+
+### Docker Services
+The application runs with three services:
+- **weather-api**: The Go application
+- **postgres**: PostgreSQL database
+- **redis**: Redis cache
+
+### Docker Commands
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs for specific service
+docker-compose logs weather-api
+docker-compose logs postgres
+docker-compose logs redis
+
+# Rebuild the application
+docker-compose build weather-api
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes (WARNING: This deletes all data)
+docker-compose down -v
+```
+
+### Environment Configuration for Docker
+Create a `.env` file in the project root:
+```bash
+cp .env.example .env
+```
+Then edit the `.env` file and set your `OPENWEATHER_API_KEY`.
 
 ## API Documentation
 
