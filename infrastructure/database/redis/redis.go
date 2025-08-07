@@ -20,27 +20,32 @@ type Redis struct {
 
 // NewRedisConnection creates a new Redis connection from configuration
 func NewRedisConnection(cfg configs.RedisConfig) (database.RedisClient, error) {
+	logger.Infof("Connecting to Redis at %s:%d", cfg.Host, cfg.Port)
+
 	client := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
+		Addr:     fmt.Sprintf("%s:%d", cfg.Host, 6379), // Default Redis port is 6379
 		Password: cfg.Password,
 		DB:       cfg.DB,
 	})
 
-	// Verify connection
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// Verify connection with longer timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if _, err := client.Ping(ctx).Result(); err != nil {
-		logger.Errorf("Failed to connect to Redis: %v", err)
+	pong, err := client.Ping(ctx).Result()
+	if err != nil {
+		logger.Errorf("Failed to connect to Redis at %s:%d: %v", cfg.Host, cfg.Port, err)
+		client.Close() // Clean up failed connection
 		return nil, fmt.Errorf("redis connection failed: %w", err)
 	}
+
+	logger.Infof("Successfully connected to Redis: %s", pong)
 
 	ttl := time.Duration(cfg.TTL) * time.Second
 	if ttl == 0 {
 		ttl = 10 * time.Minute // Default TTL
 	}
 
-	logger.Info("Successfully connected to Redis")
 	return &Redis{
 		Client: client,
 		TTL:    ttl,
@@ -49,7 +54,21 @@ func NewRedisConnection(cfg configs.RedisConfig) (database.RedisClient, error) {
 
 // HealthCheck pings the Redis server to check if it's available
 func (r *Redis) HealthCheck(ctx context.Context) error {
-	return r.Client.Ping(ctx).Err()
+	if r.Client == nil {
+		return fmt.Errorf("redis client is nil")
+	}
+
+	// Check if client is closed
+	if r.Client.Options().Addr == "" {
+		return fmt.Errorf("redis client is closed")
+	}
+
+	_, err := r.Client.Ping(ctx).Result()
+	if err != nil {
+		logger.Errorf("Redis health check failed: %v", err)
+		return fmt.Errorf("redis ping failed: %w", err)
+	}
+	return nil
 }
 
 // SetWithTTL sets a key with a custom TTL

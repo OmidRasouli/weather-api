@@ -31,6 +31,17 @@ func main() {
 	logger.Info("The application is starting...")
 	cfg := configs.MustLoad()
 	db, redisClient := RunDatabase(cfg)
+
+	// Handle cleanup when application shuts down
+	defer func() {
+		if db != nil {
+			db.Close()
+		}
+		if redisClient != nil {
+			redisClient.Close()
+		}
+	}()
+
 	RunServer(cfg, db, redisClient)
 
 	// Initialize validator with custom validations
@@ -61,7 +72,7 @@ func RunDatabase(cfg *configs.Config) (database.Database, database.RedisClient) 
 	// Create a new database connection using the configuration values.
 	db, err := postgres.NewPostgresConnection(postgres.PostgresConfig{
 		Host:     cfg.Database.Host,
-		Port:     strconv.Itoa(cfg.Database.Port),
+		Port:     "5432", //strconv.Itoa(cfg.Database.Port),
 		User:     cfg.Database.User,
 		Password: cfg.Database.Password,
 		DBName:   cfg.Database.DBName,
@@ -75,8 +86,6 @@ func RunDatabase(cfg *configs.Config) (database.Database, database.RedisClient) 
 	redisClient, err := redis.NewRedisConnection(cfg.GetRedis())
 	if err != nil {
 		logger.Warnf("Failed to connect to Redis: %v. Continuing without caching.", err)
-	} else {
-		defer redisClient.Close()
 	}
 
 	// Create a new migration instance for managing database migrations.

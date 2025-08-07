@@ -60,4 +60,7 @@ type Database interface {
 
 	// WithContext sets a context for the database operations.
 	WithContext(ctx context.Context) *gorm.DB
+
+	// Close closes the database connection.
+	Close() error
 }

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/OmidRasouli/weather-api/infrastructure/database"
+	"github.com/OmidRasouli/weather-api/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -66,13 +67,19 @@ func (hc *HealthController) ReadinessCheck(c *gin.Context) {
 
 	// Check database connection
 	if err := hc.db.Ping(ctx); err != nil {
+		logger.Errorf("Database health check failed: %v", err)
 		components["database"] = "DOWN"
 		status = "DOWN"
 		statusCode = http.StatusServiceUnavailable
 	}
 
 	// Check Redis connection
-	if err := hc.redis.HealthCheck(ctx); err != nil {
+	if hc.redis == nil {
+		components["redis"] = "DOWN"
+		status = "DOWN"
+		statusCode = http.StatusServiceUnavailable
+	} else if err := hc.redis.HealthCheck(ctx); err != nil {
+		logger.Errorf("Redis health check failed: %v", err)
 		components["redis"] = "DOWN"
 		status = "DOWN"
 		statusCode = http.StatusServiceUnavailable

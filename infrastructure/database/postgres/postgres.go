@@ -27,9 +27,9 @@ type PostgresConfig struct {
 // GetDSN constructs the Data Source Name (DSN) string from the PostgresConfig fields.
 func (pc PostgresConfig) GetDSN() string {
 	return fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		pc.Host,
-		pc.Port,
+		5432,
 		pc.User,
 		pc.Password,
 		pc.DBName,
