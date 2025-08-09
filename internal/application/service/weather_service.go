@@ -76,6 +76,10 @@ func (s *WeatherService) FetchAndStoreWeather(ctx context.Context, city string, 
 		// Log the error but don't fail the request
 		logger.Errorf("Failed to cache weather data: %v", err)
 	}
+	// Also warm ID-based cache
+	if err := s.cache.Set(ctx, weatherData.ID.String(), weatherData); err != nil {
+		logger.Errorf("Failed to cache weather data by ID: %v", err)
+	}
 
 	return weatherData, nil
 }
@@ -113,6 +117,9 @@ func (s *WeatherService) UpdateWeather(ctx context.Context, id string, update *w
 		return nil, err
 	}
 
+	// Keep track of old city/country for cache eviction if changed
+	oldCity, oldCountry := existing.City, existing.Country
+
 	if update.City != "" {
 		existing.City = update.City
 	}
@@ -137,9 +144,52 @@ func (s *WeatherService) UpdateWeather(ctx context.Context, id string, update *w
 		return nil, err
 	}
 
+	// Refresh ID-based cache
+	if err := s.cache.Set(ctx, id, existing); err != nil {
+		logger.Errorf("failed to update ID cache key %s: %v", id, err)
+	}
+
+	// Evict old city-country cache if city/country changed
+	if oldCity != existing.City || oldCountry != existing.Country {
+		oldKey := fmt.Sprintf("weather:%s:%s", oldCity, oldCountry)
+		if err := s.cache.Delete(ctx, oldKey); err != nil {
+			logger.Errorf("failed to delete cache key %s: %v", oldKey, err)
+		}
+	}
+
+	// Refresh new city-country cache
+	newKey := fmt.Sprintf("weather:%s:%s", existing.City, existing.Country)
+	if err := s.cache.Set(ctx, newKey, existing); err != nil {
+		logger.Errorf("failed to set cache key %s: %v", newKey, err)
+	}
+
 	return existing, nil
 }
 
 func (s *WeatherService) DeleteWeather(ctx context.Context, id string) error {
-	return s.repo.Delete(ctx, id)
+	// Try to load the record to compute any secondary cache keys
+	var w *weather.Weather
+	if found, err := s.repo.FindByID(ctx, id); err == nil {
+		w = found
+	}
+
+	// Delete from database first
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	// Evict ID-based cache key
+	if err := s.cache.Delete(ctx, id); err != nil {
+		logger.Errorf("failed to delete cache key %s: %v", id, err)
+	}
+
+	// Evict city-country cache key if we have the data
+	if w != nil {
+		ccKey := fmt.Sprintf("weather:%s:%s", w.City, w.Country)
+		if err := s.cache.Delete(ctx, ccKey); err != nil {
+			logger.Errorf("failed to delete cache key %s: %v", ccKey, err)
+		}
+	}
+
+	return nil
 }
