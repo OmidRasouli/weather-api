@@ -9,29 +9,43 @@ A RESTful API service for retrieving, storing, and managing weather data from Op
 
 ## Table of Contents
 
-- [Features](#features)
-- [Technology Stack](#technology-stack)
-- [Prerequisites](#prerequisites)
-- [Setup](#setup)
-- [Quickstart](#quickstart)
-- [Environment Variables](#environment-variables)
-- [Database Setup](#database-setup)
-- [Running the Application](#running-the-application)
-- [Docker Setup](#docker-setup)
-- [API Documentation](#api-documentation)
-  - [Health Check Endpoints](#health-check-endpoints)
-  - [Swagger UI](#swagger-ui)
-  - [API Endpoints](#api-endpoints)
-  - [Example Requests](#example-requests)
-  - [Postman Collection](#postman-collection)
-- [Authentication (JWT)](#authentication-jwt)
-- [Caching Strategy](#caching-strategy)
-- [Error Handling](#error-handling)
-- [Project Structure](#project-structure)
-- [Testing](#testing)
-- [Makefile Usage](#makefile-usage)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
+- [Weather API](#weather-api)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Technology Stack](#technology-stack)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+  - [Quickstart](#quickstart)
+    - [Environment Variables](#environment-variables)
+    - [Database Setup](#database-setup)
+    - [Running the Application](#running-the-application)
+      - [Option 1: Local Development](#option-1-local-development)
+      - [Option 2: Docker (Recommended)](#option-2-docker-recommended)
+  - [Docker Setup](#docker-setup)
+    - [Prerequisites for Docker](#prerequisites-for-docker)
+    - [Docker Services](#docker-services)
+    - [Docker Commands](#docker-commands)
+    - [Environment Configuration for Docker](#environment-configuration-for-docker)
+  - [API Documentation](#api-documentation)
+    - [Health Check Endpoints](#health-check-endpoints)
+    - [Swagger UI](#swagger-ui)
+    - [API Endpoints](#api-endpoints)
+    - [Example Requests](#example-requests)
+      - [Fetch Weather Data](#fetch-weather-data)
+      - [Get Latest Weather for a City](#get-latest-weather-for-a-city)
+    - [Postman Collection](#postman-collection)
+  - [Authentication (JWT)](#authentication-jwt)
+  - [Caching Strategy](#caching-strategy)
+  - [Error Handling](#error-handling)
+  - [Project Structure](#project-structure)
+  - [Testing](#testing)
+  - [Makefile Usage](#makefile-usage)
+  - [Troubleshooting](#troubleshooting)
+  - [License](#license)
+  - [Postman](#postman)
+    - [Environment variables](#environment-variables-1)
+    - [Authentication and JWT](#authentication-and-jwt)
+    - [Tips](#tips)
 
 ## Features
 
@@ -382,3 +396,40 @@ Common workflows:
 ## License
 
 [MIT](LICENSE)
+
+## Postman
+
+Use the provided Postman collection and environment to test the API.
+
+- Collection: postman/Weather_API.postman_collection.json
+- Environment: postman/Weather_API_Environment.postman_environment.json
+
+### Environment variables
+After importing the environment, add the following variables if they are missing:
+- username: your login username
+- password: your login password
+- token: will be set automatically after successful login
+Existing variables:
+- baseUrl: API base URL (default http://localhost:8080)
+- weatherId: set this after creating/finding a record to test Update/Delete
+- cityName: used for the latest-by-city request
+
+### Authentication and JWT
+1. Set username and password in the selected environment.
+2. Send Auth > Login. The test script captures the token from response fields token, accessToken, or access_token and stores it as {{token}}.
+3. Protected requests automatically include Authorization: Bearer {{token}}.
+
+Protected endpoints (require JWT):
+- POST /weather (Fetch and Store Weather)
+- PUT /weather/{id} (Update Weather)
+- DELETE /weather/{id} (Delete Weather)
+
+Public endpoints:
+- GET /health, /health/ready, /health/live
+- GET /weather (Get All)
+- GET /weather/{id} (Get By ID)
+- GET /weather/latest/{city} (Get Latest By City)
+
+### Tips
+- After creating/fetching a record, set weatherId in the environment to use Update/Delete.
+- If the Login test shows “Token not found in response,” ensure the API returns a token field named token, accessToken, or access_token (or adjust the test script accordingly).
