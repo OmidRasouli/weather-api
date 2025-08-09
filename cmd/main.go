@@ -8,8 +8,11 @@ import (
 	"github.com/OmidRasouli/weather-api/infrastructure/database"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/cache"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/postgres"
+	authUseCase "github.com/OmidRasouli/weather-api/internal/application/auth"
 	"github.com/OmidRasouli/weather-api/internal/application/service"
 	migration "github.com/OmidRasouli/weather-api/internal/database/migrations"
+	authDomain "github.com/OmidRasouli/weather-api/internal/domain/services"
+	"github.com/OmidRasouli/weather-api/internal/infrastructure/database/postgres/weather"
 	"github.com/OmidRasouli/weather-api/internal/infrastructure/openweather"
 	"github.com/OmidRasouli/weather-api/internal/interfaces/http/controller"
 	router "github.com/OmidRasouli/weather-api/internal/interfaces/http/routers"
@@ -52,13 +55,16 @@ func main() {
 }
 
 func RunServer(cfg *config.Config, db database.Database, rd cache.RedisClient) {
-	weatherRepo := postgresRepo.NewWeatherPostgresRepository(db)
+	weatherRepo := weather.NewWeatherPostgresRepository(db)
 	apiClient := openweather.NewClient(cfg.OpenWeather.APIKey)
 
 	// Pass Redis client to the weather service
 	weatherService := service.NewWeatherService(weatherRepo, apiClient, rd)
 	weatherController := controller.NewWeatherController(weatherService)
-	r := router.Setup(weatherController, nil, nil, db, rd)
+	authService := authDomain.NewAuthService()
+	authUC := authUseCase.NewUseCase(authService)
+	authController := controller.NewAuthController(authUC)
+	r := router.Setup(weatherController, authController, authUC, db, rd)
 	port := cfg.Server.Port
 	addr := ":" + strconv.Itoa(port)
 	logger.Infof("Server is starting on port %d", port)

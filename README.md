@@ -227,6 +227,32 @@ This project includes a Postman collection for easier API testing:
    - To test with different cities, update the `cityName` variable
    - For manual testing, update the `weatherId` variable with a valid UUID
 
+## Authentication (JWT)
+
+- Set env: `JWT_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`.
+- Obtain a token:
+  ```
+  POST /login
+  {
+    "username": "admin",
+    "password": "strong-password"
+  }
+  ```
+- Use the token:
+  ```
+  Authorization: Bearer <token>
+  ```
+
+Protected endpoints:
+- `POST /weather`
+- `PUT /weather/:id`
+- `DELETE /weather/:id`
+
+Public endpoints remain:
+- `GET /weather`
+- `GET /weather/:id`
+- `GET /weather/latest/:city`
+
 ## Caching Strategy
 
 Weather data is cached in Redis with the following approach:

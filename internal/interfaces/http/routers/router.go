@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/OmidRasouli/weather-api/infrastructure/database"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/cache"
+	authUseCase "github.com/OmidRasouli/weather-api/internal/application/auth"
 	"github.com/OmidRasouli/weather-api/internal/interfaces/http/controller"
 	"github.com/OmidRasouli/weather-api/internal/interfaces/http/middleware"
 	"github.com/gin-contrib/cors"
@@ -15,14 +16,25 @@ func Setup(weatherController *controller.WeatherController, authController *cont
 	// Add CORS middleware to allow cross-origin requests (useful for frontend integration).
 	router.Use(cors.Default())
 
-	router.Use(middleware.ErrorHandler())
+	// Auth routes (public)
+	router.POST("/login", authController.Login)
 
-	router.POST("/weather", weatherController.FetchAndStore)
-	router.GET("/weather", weatherController.GetAll)
-	router.GET("/weather/:id", weatherController.GetByID)
-	router.PUT("/weather/:id", weatherController.Update)
-	router.DELETE("/weather/:id", weatherController.Delete)
-	router.GET("/weather/latest/:city", weatherController.GetLatestByCity)
+	// Public weather routes (read-only)
+	weatherPublic := router.Group("/weather")
+	{
+		weatherPublic.GET("", weatherController.GetAll)
+		// Register static path before parameterized to avoid shadowing
+		weatherPublic.GET("/latest/:city", weatherController.GetLatestByCity)
+		weatherPublic.GET("/:id", weatherController.GetByID)
+	}
+
+	// Protected weather routes (mutating operations require JWT)
+	weatherProtected := router.Group("/weather", middleware.JWTAuth(authUC))
+	{
+		weatherProtected.POST("", weatherController.FetchAndStore)
+		weatherProtected.PUT("/:id", weatherController.Update)
+		weatherProtected.DELETE("/:id", weatherController.Delete)
+	}
 
 	// Add health check routes
 	healthController := controller.NewHealthController(db, redisClient)
