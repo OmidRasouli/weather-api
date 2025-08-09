@@ -85,7 +85,22 @@ func (s *WeatherService) GetAllWeather(ctx context.Context) ([]*weather.Weather,
 }
 
 func (s *WeatherService) GetWeatherByID(ctx context.Context, id string) (*weather.Weather, error) {
-	return s.repo.FindByID(ctx, id)
+	var cachedWeather *weather.Weather
+	err := s.cache.Get(ctx, id, &cachedWeather)
+	if err == nil && cachedWeather != nil {
+		return cachedWeather, nil
+	}
+
+	w, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if w != nil {
+		_ = s.cache.Set(ctx, id, w)
+	}
+
+	return w, nil
 }
 
 func (s *WeatherService) UpdateWeather(ctx context.Context, id string, update *weather.Weather) (*weather.Weather, error) {
