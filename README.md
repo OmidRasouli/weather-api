@@ -7,6 +7,32 @@
 
 A RESTful API service for retrieving, storing, and managing weather data from OpenWeatherMap.
 
+## Table of Contents
+
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+- [Quickstart](#quickstart)
+- [Environment Variables](#environment-variables)
+- [Database Setup](#database-setup)
+- [Running the Application](#running-the-application)
+- [Docker Setup](#docker-setup)
+- [API Documentation](#api-documentation)
+  - [Health Check Endpoints](#health-check-endpoints)
+  - [Swagger UI](#swagger-ui)
+  - [API Endpoints](#api-endpoints)
+  - [Example Requests](#example-requests)
+  - [Postman Collection](#postman-collection)
+- [Authentication (JWT)](#authentication-jwt)
+- [Caching Strategy](#caching-strategy)
+- [Error Handling](#error-handling)
+- [Project Structure](#project-structure)
+- [Testing](#testing)
+- [Makefile Usage](#makefile-usage)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
+
 ## Features
 
 - Fetch and store current weather data by city and country
@@ -33,6 +59,23 @@ A RESTful API service for retrieving, storing, and managing weather data from Op
 - OpenWeatherMap API key (obtain at [OpenWeather](https://openweathermap.org/api))
 
 ## Setup
+
+## Quickstart
+```bash
+# Clone and enter the project
+git clone https://github.com/OmidRasouli/weather-api weather-api
+cd weather-api
+
+# Prepare environment
+cp .env.example .env
+# Edit .env and set OPENWEATHER_API_KEY and DB/Redis settings as needed
+
+# Run everything via Docker
+docker-compose up -d
+
+# Verify health
+curl -s http://localhost:8080/health
+```
 
 ### Environment Variables
 
