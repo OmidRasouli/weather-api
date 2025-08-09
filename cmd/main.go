@@ -9,8 +9,7 @@ import (
 	"github.com/OmidRasouli/weather-api/infrastructure/database/cache"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/postgres"
 	"github.com/OmidRasouli/weather-api/internal/application/service"
-	databaseMigration "github.com/OmidRasouli/weather-api/internal/database/migrations"
-	postgresRepo "github.com/OmidRasouli/weather-api/internal/infrastructure/database/postgres/weather"
+	migration "github.com/OmidRasouli/weather-api/internal/database/migrations"
 	"github.com/OmidRasouli/weather-api/internal/infrastructure/openweather"
 	"github.com/OmidRasouli/weather-api/internal/interfaces/http/controller"
 	router "github.com/OmidRasouli/weather-api/internal/interfaces/http/routers"
@@ -94,14 +93,14 @@ func RunDatabase(cfg *config.Config) (database.Database, cache.RedisClient) {
 	}
 
 	// Create a new migration instance for managing database migrations.
-	migrationInstance, err := databaseMigration.NewMigrateInstance(db, "/internal/database/migrations", cfg.Database.DBName)
+	migrationInstance, err := migration.NewMigrateInstance(db, "/internal/database/migrations", cfg.Database.DBName)
 	if err != nil {
 		logger.Errorf("failed to create migration instance: %v", err)
 		return db, redisClient // Prevent further migration logic if migration instance creation fails
 	}
 
 	// Initialize the MigrationManager with the database connection and migration instance.
-	migrationManager := databaseMigration.NewMigrationManager(db, migrationInstance)
+	migrationManager := migration.NewMigrationManager(db, migrationInstance)
 
 	// Run all pending database migrations and log any errors.
 	if err := migrationManager.RunMigrations(); err != nil {
