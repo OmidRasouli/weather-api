@@ -1,4 +1,4 @@
-package services_test
+package service_test
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/OmidRasouli/weather-api/internal/application/services"
-	"github.com/OmidRasouli/weather-api/internal/application/services/mocks"
+	"github.com/OmidRasouli/weather-api/internal/application/service"
+	"github.com/OmidRasouli/weather-api/internal/application/service/mocks"
 	"github.com/OmidRasouli/weather-api/internal/domain/weather"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -92,7 +92,7 @@ func TestWeatherService_GetWeatherByID(t *testing.T) {
 			if tt.setupMock != nil {
 				tt.setupMock(f, tt.args)
 			}
-			service := services.NewWeatherService(repo, api, redis)
+			service := service.NewWeatherService(repo, api, redis)
 			got, err := service.GetWeatherByID(tt.args.ctx, tt.args.id.String())
 			if tt.wantErr {
 				assert.Error(t, err)

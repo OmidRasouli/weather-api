@@ -1,4 +1,4 @@
-package services_test
+package service_test
 
 import (
 	"context"
@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
-	"github.com/OmidRasouli/weather-api/internal/application/services"
-	"github.com/OmidRasouli/weather-api/internal/application/services/mocks"
+	"github.com/OmidRasouli/weather-api/internal/application/service"
+	"github.com/OmidRasouli/weather-api/internal/application/service/mocks"
 	"github.com/OmidRasouli/weather-api/internal/domain/weather"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -19,7 +19,7 @@ func TestFetchAndStoreWeather_CacheHit(t *testing.T) {
 	mockRepo := new(mocks.MockWeatherRepository)
 	mockAPI := new(mocks.MockAPIClient)
 	mockRedis := new(mocks.MockRedisClient)
-	service := services.NewWeatherService(mockRepo, mockAPI, mockRedis)
+	service := service.NewWeatherService(mockRepo, mockAPI, mockRedis)
 
 	ctx := context.TODO()
 	cacheKey := mocks.CreateCacheKey("tehran", "IR")
@@ -60,7 +60,7 @@ func TestFetchAndStoreWeather_Success(t *testing.T) {
 	mockRepo := new(mocks.MockWeatherRepository)
 	mockAPI := new(mocks.MockAPIClient)
 	mockRedis := new(mocks.MockRedisClient)
-	service := services.NewWeatherService(mockRepo, mockAPI, mockRedis)
+	service := service.NewWeatherService(mockRepo, mockAPI, mockRedis)
 
 	ctx := context.TODO()
 	apiResp := &interfaces.WeatherAPIResponse{

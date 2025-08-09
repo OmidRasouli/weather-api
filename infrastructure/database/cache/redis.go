@@ -1,4 +1,4 @@
-package redis
+package cache
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/OmidRasouli/weather-api/config"
-	"github.com/OmidRasouli/weather-api/infrastructure/database"
 	"github.com/OmidRasouli/weather-api/pkg/logger"
 	"github.com/redis/go-redis/v9"
 )
@@ -19,7 +18,7 @@ type Redis struct {
 }
 
 // NewRedisConnection creates a new Redis connection from configuration
-func NewRedisConnection(cfg config.RedisConfig) (database.RedisClient, error) {
+func NewRedisConnection(cfg config.RedisConfig) (RedisClient, error) {
 	logger.Infof("Connecting to Redis at %s:%d", cfg.Host, cfg.Port)
 
 	client := redis.NewClient(&redis.Options{

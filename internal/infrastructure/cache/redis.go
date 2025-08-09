@@ -6,18 +6,18 @@ import (
 	"fmt"
 	"time"
 
-	redisClient "github.com/OmidRasouli/weather-api/infrastructure/database/redis"
+	"github.com/OmidRasouli/weather-api/infrastructure/database/cache"
 	"github.com/redis/go-redis/v9"
 )
 
 // RedisCache provides caching operations using Redis
 type RedisCache struct {
-	redis *redisClient.Redis
+	redis *cache.Redis
 	ttl   time.Duration
 }
 
 // NewRedisCache creates a new Redis cache service
-func NewRedisCache(redis *redisClient.Redis) *RedisCache {
+func NewRedisCache(redis *cache.Redis) *RedisCache {
 	ttl := time.Duration(redis.TTL) * time.Second
 	if ttl == 0 {
 		ttl = 10 * time.Minute // Default TTL: 10 minutes

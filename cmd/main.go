@@ -6,9 +6,9 @@ import (
 	"github.com/OmidRasouli/weather-api/config"
 	_ "github.com/OmidRasouli/weather-api/docs"
 	"github.com/OmidRasouli/weather-api/infrastructure/database"
+	"github.com/OmidRasouli/weather-api/infrastructure/database/cache"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/postgres"
-	"github.com/OmidRasouli/weather-api/infrastructure/database/redis"
-	"github.com/OmidRasouli/weather-api/internal/application/services"
+	"github.com/OmidRasouli/weather-api/internal/application/service"
 	databaseMigration "github.com/OmidRasouli/weather-api/internal/database/migrations"
 	postgresRepo "github.com/OmidRasouli/weather-api/internal/infrastructure/database/postgres/weather"
 	"github.com/OmidRasouli/weather-api/internal/infrastructure/openweather"
@@ -52,12 +52,12 @@ func main() {
 	validator.Initialize()
 }
 
-func RunServer(cfg *config.Config, db database.Database, rd database.RedisClient) {
+func RunServer(cfg *config.Config, db database.Database, rd cache.RedisClient) {
 	weatherRepo := postgresRepo.NewWeatherPostgresRepository(db)
 	apiClient := openweather.NewClient(cfg.OpenWeather.APIKey)
 
 	// Pass Redis client to the weather service
-	weatherService := services.NewWeatherService(weatherRepo, apiClient, rd)
+	weatherService := service.NewWeatherService(weatherRepo, apiClient, rd)
 	weatherController := controller.NewWeatherController(weatherService)
 	r := router.Setup(weatherController, nil, nil, db, rd)
 	port := cfg.Server.Port
@@ -72,7 +72,7 @@ func RunServer(cfg *config.Config, db database.Database, rd database.RedisClient
 	}
 }
 
-func RunDatabase(cfg *config.Config) (database.Database, database.RedisClient) {
+func RunDatabase(cfg *config.Config) (database.Database, cache.RedisClient) {
 	// Create a new database connection using the configuration values.
 	dbConfig := postgres.PostgresConfig{
 		Host:     cfg.Database.Host,
@@ -88,7 +88,7 @@ func RunDatabase(cfg *config.Config) (database.Database, database.RedisClient) {
 	}
 
 	// Initialize Redis client
-	redisClient, err := redis.NewRedisConnection(cfg.Redis)
+	redisClient, err := cache.NewRedisConnection(cfg.Redis)
 	if err != nil {
 		logger.Warnf("Failed to connect to Redis: %v. Continuing without caching.", err)
 	}

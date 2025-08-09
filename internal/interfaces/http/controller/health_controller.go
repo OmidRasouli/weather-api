@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/OmidRasouli/weather-api/infrastructure/database"
+	"github.com/OmidRasouli/weather-api/infrastructure/database/cache"
 	"github.com/OmidRasouli/weather-api/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -11,11 +12,11 @@ import (
 // HealthController handles health check endpoints
 type HealthController struct {
 	db    database.Database
-	redis database.RedisClient
+	redis cache.RedisClient
 }
 
 // NewHealthController creates a new health controller
-func NewHealthController(db database.Database, redis database.RedisClient) *HealthController {
+func NewHealthController(db database.Database, redis cache.RedisClient) *HealthController {
 	return &HealthController{
 		db:    db,
 		redis: redis,

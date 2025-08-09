@@ -1,25 +1,30 @@
-package services
+package service
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	"github.com/OmidRasouli/weather-api/infrastructure/database"
+	"github.com/OmidRasouli/weather-api/infrastructure/database/cache"
 	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
 	"github.com/OmidRasouli/weather-api/internal/domain/weather"
 	"github.com/OmidRasouli/weather-api/pkg/logger"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type WeatherService struct {
 	repo       interfaces.WeatherRepository
 	apiClient  interfaces.WeatherAPIClient
-	cache      database.RedisClient
+	cache      cache.RedisClient
 	timeSource func() time.Time // testable clock
 }
 
-func NewWeatherService(repo interfaces.WeatherRepository, api interfaces.WeatherAPIClient, cache database.RedisClient) *WeatherService {
+func (s *WeatherService) GetWeather(ctx *gin.Context, param any) (any, any) {
+	panic("unimplemented")
+}
+
+func NewWeatherService(repo interfaces.WeatherRepository, api interfaces.WeatherAPIClient, cache cache.RedisClient) *WeatherService {
 	return &WeatherService{
 		repo:       repo,
 		apiClient:  api,
