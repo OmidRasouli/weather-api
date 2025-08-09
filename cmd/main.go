@@ -81,7 +81,7 @@ func RunDatabase(cfg *config.Config) (interfaces.Database, interfaces.Cache) {
 	// Create a new database connection using the configuration values.
 	dbConfig := postgres.PostgresConfig{
 		Host:            cfg.Database.Host,
-		Port:            "5432",
+		Port:            cfg.Database.Port,
 		User:            cfg.Database.User,
 		Password:        cfg.Database.Password,
 		DBName:          cfg.Database.DBName,

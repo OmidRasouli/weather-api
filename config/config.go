@@ -19,7 +19,7 @@ type ServerConfig struct {
 
 type DatabaseConfig struct {
 	Host            string        `env:"DB_HOST"`
-	Port            int           `env:"DB_PORT"`
+	Port            string        `env:"DB_PORT"`
 	User            string        `env:"DB_USER"`
 	Password        string        `env:"DB_PASS"`
 	DBName          string        `env:"DB_NAME"`
@@ -46,5 +46,6 @@ func Load() (*Config, error) {
 	if err := envconfig.Process("", &cfg); err != nil {
 		return nil, err
 	}
+	cfg.Database.Port = "5432"
 	return &cfg, nil
 }
