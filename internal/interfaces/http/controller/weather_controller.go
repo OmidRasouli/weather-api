@@ -10,9 +10,9 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// WeatherServicer defines the interface for weather service operations.
+// WeatherService defines the interface for weather service operations.
 // This interface decouples the controller from the concrete service implementation.
-type WeatherServicer interface {
+type WeatherService interface {
 	FetchAndStoreWeather(ctx context.Context, city, country string) (*weather.Weather, error)
 	GetLatestWeatherByCity(ctx context.Context, city string) (*weather.Weather, error)
 	GetAllWeather(ctx context.Context) ([]*weather.Weather, error)
@@ -22,12 +22,12 @@ type WeatherServicer interface {
 }
 
 type WeatherController struct {
-	service WeatherServicer
+	service WeatherService
 }
 
 // NewWeatherController creates a new weather controller with the provided service.
 // Using the interface instead of the concrete type enables better testability and flexibility.
-func NewWeatherController(service WeatherServicer) *WeatherController {
+func NewWeatherController(service WeatherService) *WeatherController {
 	return &WeatherController{service: service}
 }
 
