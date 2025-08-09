@@ -7,11 +7,18 @@ WORKDIR /app
 # Install git and build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
 
+# Set the GOPROXY environment variable
+ENV GOPROXY=https://goproxy.io,direct
+# Set environment variable allow bypassing the proxy for specified repos (optional)
+ENV GOPRIVATE=git.mycompany.com,github.com/my/private
+
 # Install swag for generating swagger docs
 RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 # Copy go mod files first for better layer caching
 COPY go.mod go.sum ./
+
+COPY .env /app/
 
 # Download dependencies
 RUN go mod download && go mod verify
@@ -41,6 +48,9 @@ COPY --from=builder /app/main .
 
 # Copy migrations directory
 COPY --from=builder /app/internal/database/migrations ./internal/database/migrations
+
+# Copy .env for runtime configuration (optional if using env vars or docker-compose env_file)
+COPY --from=builder /app/.env ./
 
 # Expose port
 EXPOSE 8080
