@@ -18,8 +18,8 @@ func TestFetchAndStoreWeather_CacheHit(t *testing.T) {
 	// Setup
 	mockRepo := new(mocks.MockWeatherRepository)
 	mockAPI := new(mocks.MockAPIClient)
-	mockRedis := new(mocks.MockRedisClient)
-	service := service.NewWeatherService(mockRepo, mockAPI, mockRedis)
+	mockCache := new(mocks.MockCache)
+	service := service.NewWeatherService(mockRepo, mockAPI, mockCache)
 
 	ctx := context.TODO()
 	cacheKey := mocks.CreateCacheKey("tehran", "IR")
@@ -35,8 +35,8 @@ func TestFetchAndStoreWeather_CacheHit(t *testing.T) {
 		FetchedAt:   time.Now(),
 	}
 
-	// Setup Redis to return the cached entry
-	mockRedis.On("Get", ctx, cacheKey, mock.Anything).Run(func(args mock.Arguments) {
+	// Setup Cache to return the cached entry
+	mockCache.On("Get", ctx, cacheKey, mock.Anything).Run(func(args mock.Arguments) {
 		dest := args.Get(2).(**weather.Weather)
 		*dest = cachedWeather
 	}).Return(nil)
@@ -50,7 +50,7 @@ func TestFetchAndStoreWeather_CacheHit(t *testing.T) {
 	assert.Equal(t, cachedWeather.City, result.City)
 	assert.Equal(t, cachedWeather.Temperature, result.Temperature)
 
-	mockRedis.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 	mockAPI.AssertNotCalled(t, "FetchWeatherData")
 	mockRepo.AssertNotCalled(t, "Save")
 }
@@ -59,8 +59,8 @@ func TestFetchAndStoreWeather_Success(t *testing.T) {
 	// Setup
 	mockRepo := new(mocks.MockWeatherRepository)
 	mockAPI := new(mocks.MockAPIClient)
-	mockRedis := new(mocks.MockRedisClient)
-	service := service.NewWeatherService(mockRepo, mockAPI, mockRedis)
+	mockCache := new(mocks.MockCache)
+	service := service.NewWeatherService(mockRepo, mockAPI, mockCache)
 
 	ctx := context.TODO()
 	apiResp := &interfaces.WeatherAPIResponse{
@@ -72,10 +72,10 @@ func TestFetchAndStoreWeather_Success(t *testing.T) {
 	}
 
 	cacheKey := mocks.CreateCacheKey("tehran", "IR")
-	mockRedis.On("Get", ctx, cacheKey, mock.Anything).Return(fmt.Errorf("cache miss"))
+	mockCache.On("Get", ctx, cacheKey, mock.Anything).Return(fmt.Errorf("cache miss"))
 	mockAPI.On("FetchWeatherData", ctx, "tehran", "IR").Return(apiResp, nil)
 	mockRepo.On("Save", ctx, mock.AnythingOfType("*weather.Weather")).Return(nil)
-	mockRedis.On("Set", ctx, cacheKey, mock.Anything).Return(nil)
+	mockCache.On("Set", ctx, cacheKey, mock.Anything).Return(nil)
 
 	// Execute
 	result, err := service.FetchAndStoreWeather(ctx, "tehran", "IR")
@@ -87,5 +87,5 @@ func TestFetchAndStoreWeather_Success(t *testing.T) {
 
 	mockAPI.AssertExpectations(t)
 	mockRepo.AssertExpectations(t)
-	mockRedis.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
 }

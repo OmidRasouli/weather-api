@@ -18,7 +18,7 @@ func TestWeatherService_GetWeatherByID(t *testing.T) {
 	type fields struct {
 		repo  *mocks.MockWeatherRepository
 		api   *mocks.MockAPIClient
-		redis *mocks.MockRedisClient
+		cache *mocks.MockCache
 	}
 	type args struct {
 		ctx context.Context
@@ -87,12 +87,12 @@ func TestWeatherService_GetWeatherByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := new(mocks.MockWeatherRepository)
 			api := new(mocks.MockAPIClient)
-			redis := new(mocks.MockRedisClient)
-			f := fields{repo, api, redis}
+			cache := new(mocks.MockCache)
+			f := fields{repo, api, cache}
 			if tt.setupMock != nil {
 				tt.setupMock(f, tt.args)
 			}
-			service := service.NewWeatherService(repo, api, redis)
+			service := service.NewWeatherService(repo, api, cache)
 			got, err := service.GetWeatherByID(tt.args.ctx, tt.args.id.String())
 			if tt.wantErr {
 				assert.Error(t, err)

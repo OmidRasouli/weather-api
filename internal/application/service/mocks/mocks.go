@@ -20,8 +20,8 @@ type MockAPIClient struct {
 	mock.Mock
 }
 
-// MockRedisClient mocks the Redis client
-type MockRedisClient struct {
+// MockCache mocks the Redis client
+type MockCache struct {
 	mock.Mock
 }
 
@@ -63,62 +63,62 @@ func (m *MockAPIClient) FetchWeatherData(ctx context.Context, city string, count
 }
 
 // MockRedisClient methods
-func (m *MockRedisClient) Get(ctx context.Context, key string, dest interface{}) error {
+func (m *MockCache) Get(ctx context.Context, key string, dest interface{}) error {
 	args := m.Called(ctx, key, dest)
 	return args.Error(0)
 }
 
-func (m *MockRedisClient) Set(ctx context.Context, key string, value interface{}) error {
+func (m *MockCache) Set(ctx context.Context, key string, value interface{}) error {
 	args := m.Called(ctx, key, value)
 	return args.Error(0)
 }
 
-func (m *MockRedisClient) SetWithTTL(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
+func (m *MockCache) SetWithTTL(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
 	args := m.Called(ctx, key, value, ttl)
 	return args.Error(0)
 }
 
-func (m *MockRedisClient) Delete(ctx context.Context, keys ...string) error {
+func (m *MockCache) Delete(ctx context.Context, keys ...string) error {
 	args := m.Called(ctx, keys)
 	return args.Error(0)
 }
 
-func (m *MockRedisClient) Exists(ctx context.Context, key string) (bool, error) {
+func (m *MockCache) Exists(ctx context.Context, key string) (bool, error) {
 	args := m.Called(ctx, key)
 	return args.Bool(0), args.Error(1)
 }
 
-func (m *MockRedisClient) GetTTL(ctx context.Context, key string) (time.Duration, error) {
+func (m *MockCache) GetTTL(ctx context.Context, key string) (time.Duration, error) {
 	args := m.Called(ctx, key)
 	return args.Get(0).(time.Duration), args.Error(1)
 }
 
-func (m *MockRedisClient) Flush(ctx context.Context) error {
+func (m *MockCache) Flush(ctx context.Context) error {
 	args := m.Called(ctx)
 	return args.Error(0)
 }
 
-func (m *MockRedisClient) GetKeys(ctx context.Context, pattern string) ([]string, error) {
+func (m *MockCache) GetKeys(ctx context.Context, pattern string) ([]string, error) {
 	args := m.Called(ctx, pattern)
 	return args.Get(0).([]string), args.Error(1)
 }
 
-func (m *MockRedisClient) Expire(ctx context.Context, key string, ttl time.Duration) error {
+func (m *MockCache) Expire(ctx context.Context, key string, ttl time.Duration) error {
 	args := m.Called(ctx, key, ttl)
 	return args.Error(0)
 }
 
-func (m *MockRedisClient) Increment(ctx context.Context, key string) (int64, error) {
+func (m *MockCache) Increment(ctx context.Context, key string) (int64, error) {
 	args := m.Called(ctx, key)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockRedisClient) HealthCheck(ctx context.Context) error {
+func (m *MockCache) HealthCheck(ctx context.Context) error {
 	args := m.Called(ctx)
 	return args.Error(0)
 }
 
-func (m *MockRedisClient) Close() error {
+func (m *MockCache) Close() error {
 	args := m.Called()
 	return args.Error(0)
 }
