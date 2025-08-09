@@ -4,11 +4,13 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/OmidRasouli/weather-api/internal/domain/weather"
+	"github.com/OmidRasouli/weather-api/internal/testhelpers"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"
 	"github.com/stretchr/testify/mock"
@@ -25,6 +27,9 @@ func (m *MockWeatherService) FetchAndStoreWeather(ctx context.Context, city, cou
 
 func (m *MockWeatherService) GetLatestWeatherByCity(ctx context.Context, city string) (*weather.Weather, error) {
 	args := m.Called(ctx, city)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*weather.Weather), args.Error(1)
 }
 
@@ -48,8 +53,19 @@ func (m *MockWeatherService) DeleteWeather(ctx context.Context, id string) error
 	return args.Error(0)
 }
 
-func TestFetchAndStore_Success(t *testing.T) {
+func TestMain(m *testing.M) {
+	// Initialize logger for all tests in this package
+	testhelpers.InitTestLogger()
+
+	// Set gin to test mode
 	gin.SetMode(gin.TestMode)
+
+	// Run tests
+	code := m.Run()
+	os.Exit(code)
+}
+
+func TestFetchAndStore_Success(t *testing.T) {
 	mockService := new(MockWeatherService)
 
 	sut := NewWeatherController(mockService)
@@ -80,7 +96,6 @@ func TestFetchAndStore_Success(t *testing.T) {
 }
 
 func TestGetByID_Success(t *testing.T) {
-	gin.SetMode(gin.TestMode)
 	mockService := new(MockWeatherService)
 	sut := NewWeatherController(mockService)
 
@@ -98,7 +113,9 @@ func TestGetByID_Success(t *testing.T) {
 		FetchedAt:   time.Now(),
 	}
 
-	mockService.On("GetWeatherByID", mock.Anything, "test-id").Return(expected, nil)
+	mockService.
+		On("GetWeatherByID", mock.Anything, "test-id").
+		Return(expected, nil)
 
 	sut.GetByID(c)
 
@@ -107,7 +124,6 @@ func TestGetByID_Success(t *testing.T) {
 }
 
 func TestUpdate_Success(t *testing.T) {
-	gin.SetMode(gin.TestMode)
 	mockService := new(MockWeatherService)
 	sut := NewWeatherController(mockService)
 
@@ -139,7 +155,6 @@ func TestUpdate_Success(t *testing.T) {
 }
 
 func TestDelete_Success(t *testing.T) {
-	gin.SetMode(gin.TestMode)
 	mockService := new(MockWeatherService)
 	sut := NewWeatherController(mockService)
 
@@ -156,13 +171,12 @@ func TestDelete_Success(t *testing.T) {
 }
 
 func TestGetLatestByCity_Success(t *testing.T) {
-	gin.SetMode(gin.TestMode)
 	mockService := new(MockWeatherService)
 	sut := NewWeatherController(mockService)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Params = gin.Params{{Key: "City", Value: "tehran"}}
+	c.Params = gin.Params{{Key: "city", Value: "tehran"}}
 
 	expected := &weather.Weather{
 		City:        "tehran",
@@ -174,7 +188,7 @@ func TestGetLatestByCity_Success(t *testing.T) {
 		FetchedAt:   time.Now(),
 	}
 
-	mockService.On("GetLatestWeatherByCity", mock.Anything, "tehran").Return(expected, nil)
+	mockService.On("GetLatestWeatherByCity", mock.AnythingOfType("*gin.Context"), "tehran").Return(expected, nil)
 
 	sut.GetLatestByCity(c)
 

@@ -11,52 +11,107 @@ import (
 	"github.com/OmidRasouli/weather-api/internal/domain/weather"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-func TestGetWeatherByID_Success(t *testing.T) {
-	mockRepo := new(mocks.MockWeatherRepository)
-	mockAPI := new(mocks.MockAPIClient)
-	mockRedis := new(mocks.MockRedisClient)
-	service := services.NewWeatherService(mockRepo, mockAPI, mockRedis)
-
-	ctx := context.TODO()
-	id := uuid.New()
-	expected := &weather.Weather{
-		ID:          id,
-		City:        "tehran",
-		Country:     "IR",
-		Temperature: 30.5,
-		Description: "sunny",
-		Humidity:    40,
-		WindSpeed:   5.5,
-		FetchedAt:   time.Now(),
+func TestWeatherService_GetWeatherByID(t *testing.T) {
+	type fields struct {
+		repo  *mocks.MockWeatherRepository
+		api   *mocks.MockAPIClient
+		redis *mocks.MockRedisClient
+	}
+	type args struct {
+		ctx context.Context
+		id  uuid.UUID
+	}
+	now := time.Now()
+	tests := []struct {
+		name        string
+		setupMock   func(f fields, a args)
+		args        args
+		wantErr     bool
+		expected    *weather.Weather
+		expectedErr string
+	}{
+		{
+			name: "success",
+			args: args{
+				ctx: context.TODO(),
+				id:  uuid.New(),
+			},
+			setupMock: func(f fields, a args) {
+				expected := &weather.Weather{
+					ID:          a.id,
+					City:        "tehran",
+					Country:     "IR",
+					Temperature: 30.5,
+					Description: "sunny",
+					Humidity:    40,
+					WindSpeed:   5.5,
+					FetchedAt:   now,
+				}
+				f.repo.On("FindByID", a.ctx, mock.MatchedBy(func(u string) bool {
+					return u == a.id.String()
+				})).Return(expected, nil)
+			},
+			wantErr: false,
+			expected: &weather.Weather{
+				ID:          uuid.Nil, // will check fields below
+				City:        "tehran",
+				Country:     "IR",
+				Temperature: 30.5,
+				Description: "sunny",
+				Humidity:    40,
+				WindSpeed:   5.5,
+				FetchedAt:   now,
+			},
+		},
+		{
+			name: "not found",
+			args: args{
+				ctx: context.TODO(),
+				id:  uuid.New(),
+			},
+			setupMock: func(f fields, a args) {
+				f.repo.On("FindByID", a.ctx, mock.MatchedBy(func(u string) bool {
+					return u == a.id.String()
+				})).Return((*weather.Weather)(nil), fmt.Errorf("not found"))
+			},
+			wantErr:     true,
+			expected:    nil,
+			expectedErr: "not found",
+		},
 	}
 
-	mockRepo.On("FindByID", ctx, id).Return(expected, nil)
-
-	result, err := service.GetWeatherByID(ctx, id.String())
-
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.Equal(t, expected.ID, result.ID)
-	assert.Equal(t, expected.City, result.City)
-	mockRepo.AssertExpectations(t)
-}
-
-func TestGetWeatherByID_NotFound(t *testing.T) {
-	mockRepo := new(mocks.MockWeatherRepository)
-	mockAPI := new(mocks.MockAPIClient)
-	mockRedis := new(mocks.MockRedisClient)
-	service := services.NewWeatherService(mockRepo, mockAPI, mockRedis)
-
-	ctx := context.TODO()
-	id := uuid.New()
-	mockRepo.On("FindByID", ctx, id).Return((*weather.Weather)(nil), fmt.Errorf("not found"))
-
-	result, err := service.GetWeatherByID(ctx, id.String())
-
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.Contains(t, err.Error(), "not found")
-	mockRepo.AssertExpectations(t)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := new(mocks.MockWeatherRepository)
+			api := new(mocks.MockAPIClient)
+			redis := new(mocks.MockRedisClient)
+			f := fields{repo, api, redis}
+			if tt.setupMock != nil {
+				tt.setupMock(f, tt.args)
+			}
+			service := services.NewWeatherService(repo, api, redis)
+			got, err := service.GetWeatherByID(tt.args.ctx, tt.args.id.String())
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, got)
+				if tt.expectedErr != "" {
+					assert.Contains(t, err.Error(), tt.expectedErr)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, got)
+				assert.Equal(t, tt.args.id, got.ID)
+				assert.Equal(t, tt.expected.City, got.City)
+				assert.Equal(t, tt.expected.Country, got.Country)
+				assert.Equal(t, tt.expected.Temperature, got.Temperature)
+				assert.Equal(t, tt.expected.Description, got.Description)
+				assert.Equal(t, tt.expected.Humidity, got.Humidity)
+				assert.Equal(t, tt.expected.WindSpeed, got.WindSpeed)
+			}
+			repo.AssertExpectations(t)
+		})
+	}
 }

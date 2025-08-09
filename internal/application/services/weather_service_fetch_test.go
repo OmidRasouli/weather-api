@@ -37,8 +37,8 @@ func TestFetchAndStoreWeather_CacheHit(t *testing.T) {
 
 	// Setup Redis to return the cached entry
 	mockRedis.On("Get", ctx, cacheKey, mock.Anything).Run(func(args mock.Arguments) {
-		dest := args.Get(2).(*weather.Weather)
-		*dest = *cachedWeather
+		dest := args.Get(2).(**weather.Weather)
+		*dest = cachedWeather
 	}).Return(nil)
 
 	// Execute

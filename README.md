@@ -61,6 +61,13 @@ REDIS_DB=0
 REDIS_TTL=600
 ```
 
+Configuration reference:
+- SERVER_PORT: API server port (default 8080)
+- DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_SSLMODE: PostgreSQL connection params
+- OPENWEATHER_API_KEY: Your OpenWeather API key (required)
+- REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_DB: Redis connection params
+- REDIS_TTL: Cache TTL in seconds (default 600)
+
 ### Database Setup
 
 1. Create a PostgreSQL database named `weather`
@@ -180,7 +187,7 @@ http://localhost:8080/swagger/index.html
 | POST | /weather | Fetch and store weather for a city/country |
 | PUT | /weather/:id | Update a weather record |
 | DELETE | /weather/:id | Delete a weather record |
-| GET | /weather/latest/:cityName | Get latest weather for a city |
+| GET | /weather/latest/:city | Get latest weather for a city |
 
 ### Example Requests
 
@@ -188,7 +195,7 @@ http://localhost:8080/swagger/index.html
 ```bash
 curl -X POST http://localhost:8080/weather \
   -H "Content-Type: application/json" \
-  -d '{"city": "London", "country": "UK"}'
+  -d '{"city": "London", "country": "GB"}'
 ```
 
 #### Get Latest Weather for a City
@@ -266,6 +273,42 @@ Run tests with:
 ```bash
 go test ./...
 ```
+
+Or use the Makefile targets:
+
+```bash
+make           # default: runs all tests (integration then unit)
+make test-unit
+make test-integration
+make test-coverage     # prints summary and writes coverage.out
+make coverage-html     # generates coverage.html from coverage.out
+make test-race         # runs tests with -race
+make test-fresh        # clears test cache, then runs tests
+make build
+make run
+make deps
+make clean
+make health            # quick /health check (requires server running)
+make test-watch        # watches integration tests (requires 'entr')
+```
+
+## Makefile Usage
+
+Common workflows:
+- Quick test run: make or make test
+- Unit tests only: make test-unit
+- Integration tests only: make test-integration
+- Coverage report: make test-coverage then make coverage-html
+- Data race checks: make test-race
+- Fresh (no cache): make test-fresh
+- Build/run: make build, make run
+
+## Troubleshooting
+- 401/403 from OpenWeather: ensure OPENWEATHER_API_KEY is set and valid.
+- Cannot connect to DB/Redis: verify DB_* and REDIS_* envs and that containers are up (docker-compose ps).
+- Swagger not reachable: confirm server is running on SERVER_PORT and visit /swagger/index.html.
+- Go version mismatch: align the README badge with your go.mod Go version.
+- Tests failing due to cache: use make test-fresh.
 
 ## License
 
