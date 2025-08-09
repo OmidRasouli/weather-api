@@ -2,7 +2,9 @@ package database
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/OmidRasouli/weather-api/pkg/logger"
 	"gorm.io/gorm"
 )
 
@@ -79,4 +81,22 @@ func (db *PostgresDB) Rollback() *gorm.DB {
 // WithContext sets a context for the database operations.
 func (db *PostgresDB) WithContext(ctx context.Context) *gorm.DB {
 	return db.conn.WithContext(ctx)
+}
+
+// Close closes the database connection
+func (db *PostgresDB) Close() error {
+	// Get the underlying *sql.DB from GORM
+	sqlDB, err := db.conn.DB()
+	if err != nil {
+		logger.Errorf("Failed to get underlying sql.DB: %v", err)
+		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+	}
+
+	if err := sqlDB.Close(); err != nil {
+		logger.Errorf("Failed to close database connection: %v", err)
+		return fmt.Errorf("failed to close database connection: %w", err)
+	}
+
+	logger.Info("Database connection closed successfully")
+	return nil
 }

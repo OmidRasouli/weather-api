@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/OmidRasouli/weather-api/infrastructure/database"
+	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
 	"github.com/OmidRasouli/weather-api/pkg/logger"
 )
 
@@ -22,14 +23,20 @@ type PostgresConfig struct {
 	DBName string
 	// SSLMode specifies the SSL mode for the connection (e.g., "disable", "require").
 	SSLMode string
+	// MaxIdleConns specifies the maximum number of idle connections.
+	MaxIdleConns int
+	// MaxOpenConns specifies the maximum number of open connections.
+	MaxOpenConns int
+	// ConnMaxLifetime specifies the maximum lifetime of a connection.
+	ConnMaxLifetime time.Duration
 }
 
 // GetDSN constructs the Data Source Name (DSN) string from the PostgresConfig fields.
 func (pc PostgresConfig) GetDSN() string {
 	return fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		pc.Host,
-		pc.Port,
+		5432,
 		pc.User,
 		pc.Password,
 		pc.DBName,
@@ -39,12 +46,12 @@ func (pc PostgresConfig) GetDSN() string {
 
 // NewPostgresConnection establishes a connection to the PostgreSQL database using the provided configuration.
 // It retries the connection up to a maximum number of attempts in case of failure.
-func NewPostgresConnection(config PostgresConfig) (database.Database, error) {
+func NewPostgresConnection(config PostgresConfig) (interfaces.Database, error) {
 	// Generate the DSN string from the configuration.
 	dsn := config.GetDSN()
 
 	// Initialize variables for the database instance and error handling.
-	var dbInstance database.Database
+	var dbInstance interfaces.Database
 	var err error
 	maxRetries := 5
 
@@ -72,12 +79,22 @@ func NewPostgresConnection(config PostgresConfig) (database.Database, error) {
 		return nil, fmt.Errorf("failed to get database instance: %w", err)
 	}
 
-	// Set the maximum number of idle connections.
-	sqlDB.SetMaxIdleConns(10)
-	// Set the maximum number of open connections.
-	sqlDB.SetMaxOpenConns(100)
-	// Set the maximum lifetime of a connection.
-	sqlDB.SetConnMaxLifetime(time.Hour)
+	// Use config values, fallback to defaults if zero
+	if config.MaxIdleConns > 0 {
+		sqlDB.SetMaxIdleConns(config.MaxIdleConns)
+	} else {
+		sqlDB.SetMaxIdleConns(10)
+	}
+	if config.MaxOpenConns > 0 {
+		sqlDB.SetMaxOpenConns(config.MaxOpenConns)
+	} else {
+		sqlDB.SetMaxOpenConns(100)
+	}
+	if config.ConnMaxLifetime > 0 {
+		sqlDB.SetConnMaxLifetime(config.ConnMaxLifetime)
+	} else {
+		sqlDB.SetConnMaxLifetime(time.Hour)
+	}
 
 	// Return the established database instance.
 	return dbInstance, nil
