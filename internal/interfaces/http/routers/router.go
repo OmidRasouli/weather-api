@@ -20,6 +20,9 @@ func Setup(
 	// Add CORS middleware to allow cross-origin requests (useful for frontend integration).
 	router.Use(cors.Default())
 
+	// Global error handler to standardize error responses and convert c.Error(...) into JSON.
+	router.Use(middleware.ErrorHandler())
+
 	// Auth routes (public)
 	router.POST("/login", authController.Login)
 
