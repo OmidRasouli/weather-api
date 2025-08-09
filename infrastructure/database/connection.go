@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -18,7 +19,7 @@ type PostgresDB struct {
 
 // NewPostgresDB initializes a new PostgresDB instance using the provided DSN (Data Source Name).
 // It returns a Database interface implementation or an error if the connection fails.
-func NewPostgresDB(dsn string) (Database, error) {
+func NewPostgresDB(dsn string) (interfaces.Database, error) {
 	conn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %v", err)

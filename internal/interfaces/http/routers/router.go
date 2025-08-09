@@ -1,7 +1,6 @@
 package router
 
 import (
-	"github.com/OmidRasouli/weather-api/infrastructure/database"
 	authUseCase "github.com/OmidRasouli/weather-api/internal/application/auth"
 	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
 	"github.com/OmidRasouli/weather-api/internal/interfaces/http/controller"
@@ -10,7 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Setup(weatherController *controller.WeatherController, authController *controller.AuthController, authUC *authUseCase.UseCase, db database.Database, redisClient interfaces.Cache) *gin.Engine {
+func Setup(
+	weatherController *controller.WeatherController,
+	authController *controller.AuthController,
+	authUC *authUseCase.UseCase,
+	db interfaces.Database,
+	redisClient interfaces.Cache) *gin.Engine {
 	router := gin.Default()
 
 	// Add CORS middleware to allow cross-origin requests (useful for frontend integration).

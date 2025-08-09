@@ -5,7 +5,6 @@ import (
 
 	"github.com/OmidRasouli/weather-api/config"
 	_ "github.com/OmidRasouli/weather-api/docs"
-	"github.com/OmidRasouli/weather-api/infrastructure/database"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/cache"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/postgres"
 	authUseCase "github.com/OmidRasouli/weather-api/internal/application/auth"
@@ -55,7 +54,7 @@ func main() {
 	validator.Initialize()
 }
 
-func RunServer(cfg *config.Config, db database.Database, rd interfaces.Cache) {
+func RunServer(cfg *config.Config, db interfaces.Database, rd interfaces.Cache) {
 	weatherRepo := weather.NewWeatherPostgresRepository(db)
 	apiClient := openweather.NewClient(cfg.OpenWeather.APIKey)
 
@@ -78,7 +77,7 @@ func RunServer(cfg *config.Config, db database.Database, rd interfaces.Cache) {
 	}
 }
 
-func RunDatabase(cfg *config.Config) (database.Database, interfaces.Cache) {
+func RunDatabase(cfg *config.Config) (interfaces.Database, interfaces.Cache) {
 	// Create a new database connection using the configuration values.
 	dbConfig := postgres.PostgresConfig{
 		Host:     cfg.Database.Host,

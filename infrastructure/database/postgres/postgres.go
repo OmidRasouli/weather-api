@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/OmidRasouli/weather-api/infrastructure/database"
+	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
 	"github.com/OmidRasouli/weather-api/pkg/logger"
 )
 
@@ -39,12 +40,12 @@ func (pc PostgresConfig) GetDSN() string {
 
 // NewPostgresConnection establishes a connection to the PostgreSQL database using the provided configuration.
 // It retries the connection up to a maximum number of attempts in case of failure.
-func NewPostgresConnection(config PostgresConfig) (database.Database, error) {
+func NewPostgresConnection(config PostgresConfig) (interfaces.Database, error) {
 	// Generate the DSN string from the configuration.
 	dsn := config.GetDSN()
 
 	// Initialize variables for the database instance and error handling.
-	var dbInstance database.Database
+	var dbInstance interfaces.Database
 	var err error
 	maxRetries := 5
 

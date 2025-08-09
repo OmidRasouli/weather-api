@@ -3,7 +3,6 @@ package controller
 import (
 	"net/http"
 
-	"github.com/OmidRasouli/weather-api/infrastructure/database"
 	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
 	"github.com/OmidRasouli/weather-api/pkg/logger"
 	"github.com/gin-gonic/gin"
@@ -11,12 +10,12 @@ import (
 
 // HealthController handles health check endpoints
 type HealthController struct {
-	db    database.Database
+	db    interfaces.Database
 	redis interfaces.Cache
 }
 
 // NewHealthController creates a new health controller
-func NewHealthController(db database.Database, redis interfaces.Cache) *HealthController {
+func NewHealthController(db interfaces.Database, redis interfaces.Cache) *HealthController {
 	return &HealthController{
 		db:    db,
 		redis: redis,
