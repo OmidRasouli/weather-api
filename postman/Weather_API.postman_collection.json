@@ -6,6 +6,54 @@
   },
   "item": [
     {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["login"]
+            },
+            "description": "Authenticate and obtain a JWT. Stores token in environment as {{token}}."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let t = '';",
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  t = json.token || json.accessToken || json.access_token || '';",
+                  "} catch (e) {}",
+                  "if (t) {",
+                  "  pm.environment.set('token', t);",
+                  "  pm.test('Token captured', function () { pm.expect(pm.environment.get('token')).to.be.ok; });",
+                  "} else {",
+                  "  pm.test('Token not found in response', function () { pm.expect(false).to.be.true; });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Authentication endpoints"
+    },
+    {
       "name": "Health Checks",
       "item": [
         {
@@ -81,10 +129,8 @@
           "path": ["weather"]
         },
         "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
         ],
         "body": {
           "mode": "raw",
@@ -95,7 +141,7 @@
             }
           }
         },
-        "description": "Fetches weather data from external API for a city and country, and stores it in the database"
+        "description": "Fetches weather data from external API for a city and country, and stores it in the database (requires JWT)"
       }
     },
     {
@@ -108,10 +154,8 @@
           "path": ["weather", "{{weatherId}}"]
         },
         "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
         ],
         "body": {
           "mode": "raw",
@@ -122,7 +166,7 @@
             }
           }
         },
-        "description": "Updates an existing weather record"
+        "description": "Updates an existing weather record (requires JWT)"
       }
     },
     {
@@ -134,7 +178,10 @@
           "host": ["{{baseUrl}}"],
           "path": ["weather", "{{weatherId}}"]
         },
-        "description": "Deletes a weather record"
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}", "type": "text" }
+        ],
+        "description": "Deletes a weather record (requires JWT)"
       }
     },
     {
