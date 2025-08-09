@@ -2,14 +2,14 @@ package interfaces
 
 import (
 	"context"
+	"time"
 )
 
 type Cache interface {
 	Get(ctx context.Context, key string, dest interface{}) error
 	Set(ctx context.Context, key string, value interface{}) error
 	Delete(ctx context.Context, key string) error
-	Close() error
-}
+	Expire(ctx context.Context, key string, ttl time.Duration)
 	Increment(ctx context.Context, key string) (int64, error)
 	Close() error
 	HealthCheck(ctx context.Context) error
