@@ -43,7 +43,7 @@ func (r *WeatherPostgresRepository) FindAll(ctx context.Context) ([]*weather.Wea
 func (r *WeatherPostgresRepository) FindLatestByCity(ctx context.Context, city string) (*weather.Weather, error) {
 	var m weatherModel
 	err := r.db.WithContext(ctx).
-		Where("city_name = ?", city).
+		Where("city = ?", city).
 		Order("fetched_at DESC").
 		First(&m).Error
 	if err != nil {
