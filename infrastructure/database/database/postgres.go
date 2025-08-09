@@ -23,6 +23,12 @@ type PostgresConfig struct {
 	DBName string
 	// SSLMode specifies the SSL mode for the connection (e.g., "disable", "require").
 	SSLMode string
+	// MaxIdleConns specifies the maximum number of idle connections.
+	MaxIdleConns int
+	// MaxOpenConns specifies the maximum number of open connections.
+	MaxOpenConns int
+	// ConnMaxLifetime specifies the maximum lifetime of a connection.
+	ConnMaxLifetime time.Duration
 }
 
 // GetDSN constructs the Data Source Name (DSN) string from the PostgresConfig fields.
@@ -73,12 +79,22 @@ func NewPostgresConnection(config PostgresConfig) (interfaces.Database, error) {
 		return nil, fmt.Errorf("failed to get database instance: %w", err)
 	}
 
-	// Set the maximum number of idle connections.
-	sqlDB.SetMaxIdleConns(10)
-	// Set the maximum number of open connections.
-	sqlDB.SetMaxOpenConns(100)
-	// Set the maximum lifetime of a connection.
-	sqlDB.SetConnMaxLifetime(time.Hour)
+	// Use config values, fallback to defaults if zero
+	if config.MaxIdleConns > 0 {
+		sqlDB.SetMaxIdleConns(config.MaxIdleConns)
+	} else {
+		sqlDB.SetMaxIdleConns(10)
+	}
+	if config.MaxOpenConns > 0 {
+		sqlDB.SetMaxOpenConns(config.MaxOpenConns)
+	} else {
+		sqlDB.SetMaxOpenConns(100)
+	}
+	if config.ConnMaxLifetime > 0 {
+		sqlDB.SetConnMaxLifetime(config.ConnMaxLifetime)
+	} else {
+		sqlDB.SetConnMaxLifetime(time.Hour)
+	}
 
 	// Return the established database instance.
 	return dbInstance, nil

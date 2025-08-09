@@ -6,7 +6,7 @@ import (
 	"github.com/OmidRasouli/weather-api/config"
 	_ "github.com/OmidRasouli/weather-api/docs"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/cache"
-	"github.com/OmidRasouli/weather-api/infrastructure/database/postgres"
+	postgres "github.com/OmidRasouli/weather-api/infrastructure/database/database"
 	authUseCase "github.com/OmidRasouli/weather-api/internal/application/auth"
 	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
 	"github.com/OmidRasouli/weather-api/internal/application/service"
@@ -80,12 +80,15 @@ func RunServer(cfg *config.Config, db interfaces.Database, rd interfaces.Cache) 
 func RunDatabase(cfg *config.Config) (interfaces.Database, interfaces.Cache) {
 	// Create a new database connection using the configuration values.
 	dbConfig := postgres.PostgresConfig{
-		Host:     cfg.Database.Host,
-		Port:     "5432",
-		User:     cfg.Database.User,
-		Password: cfg.Database.Password,
-		DBName:   cfg.Database.DBName,
-		SSLMode:  cfg.Database.SSLMode,
+		Host:            cfg.Database.Host,
+		Port:            "5432",
+		User:            cfg.Database.User,
+		Password:        cfg.Database.Password,
+		DBName:          cfg.Database.DBName,
+		SSLMode:         cfg.Database.SSLMode,
+		MaxIdleConns:    cfg.Database.MaxIdleConns,
+		MaxOpenConns:    cfg.Database.MaxOpenConns,
+		ConnMaxLifetime: cfg.Database.ConnMaxLifetime,
 	}
 	db, err := postgres.NewPostgresConnection(dbConfig)
 	if err != nil {

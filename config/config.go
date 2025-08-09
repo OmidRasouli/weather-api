@@ -1,6 +1,10 @@
 package config
 
-import "github.com/kelseyhightower/envconfig"
+import (
+	"time"
+
+	"github.com/kelseyhightower/envconfig"
+)
 
 type Config struct {
 	Server      ServerConfig
@@ -14,12 +18,15 @@ type ServerConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host     string `env:"DB_HOST"`
-	Port     int    `env:"DB_PORT"`
-	User     string `env:"DB_USER"`
-	Password string `env:"DB_PASS"`
-	DBName   string `env:"DB_NAME"`
-	SSLMode  string `env:"DB_SSL_MODE"`
+	Host            string        `env:"DB_HOST"`
+	Port            int           `env:"DB_PORT"`
+	User            string        `env:"DB_USER"`
+	Password        string        `env:"DB_PASS"`
+	DBName          string        `env:"DB_NAME"`
+	SSLMode         string        `env:"DB_SSL_MODE"`
+	MaxIdleConns    int           `env:"DB_MAX_IDLE_CONNS"`
+	MaxOpenConns    int           `env:"DB_MAX_OPEN_CONNS"`
+	ConnMaxLifetime time.Duration `env:"DB_CONN_MAX_LIFETIME"`
 }
 
 type RedisConfig struct {
