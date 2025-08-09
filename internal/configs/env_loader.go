@@ -37,44 +37,29 @@ func loadEnvFile() error {
 	return nil
 }
 
-// loadConfig reads configuration from environment variables.
-// Returns a Config struct or an error if loading fails.
 func loadConfig() (*Config, error) {
-	// First try to load variables from .env file
-	// In Docker, environment variables are usually passed directly
 	if err := loadEnvFile(); err != nil {
 		logger.Warnf("Error loading .env file: %v", err)
 	}
 
-	// Server config with default fallback
+	// Server config
 	serverPortStr := os.Getenv("SERVER_PORT")
-	serverPort := 8080 // Default port
+	serverPort := 8080
 	if serverPortStr != "" {
-		port, err := strconv.Atoi(serverPortStr)
-		if err != nil {
-			logger.Warnf("Invalid SERVER_PORT value: %s, using default: %d", serverPortStr, serverPort)
-		} else {
+		if port, err := strconv.Atoi(serverPortStr); err == nil {
 			serverPort = port
 		}
-	} else {
-		logger.Warn("SERVER_PORT not set, using default: 8080")
 	}
 
-	// Database config with better error handling
+	// Database config
 	dbPortStr := os.Getenv("DB_PORT")
-	dbPort := 5432 // Default PostgreSQL port
+	dbPort := 5432
 	if dbPortStr != "" {
-		port, err := strconv.Atoi(dbPortStr)
-		if err != nil {
-			logger.Warnf("Invalid DB_PORT value: %s, using default: %d", dbPortStr, dbPort)
-		} else {
+		if port, err := strconv.Atoi(dbPortStr); err == nil {
 			dbPort = port
 		}
-	} else {
-		logger.Warn("DB_PORT not set, using default: 5432")
 	}
 
-	// Get other DB settings with defaults
 	dbHost := getEnvOrDefault("DB_HOST", "localhost")
 	dbUser := getEnvOrDefault("DB_USER", "postgres")
 	dbPassword := getEnvOrDefault("DB_PASSWORD", "")
@@ -83,29 +68,20 @@ func loadConfig() (*Config, error) {
 
 	// OpenWeather config
 	apiKey := os.Getenv("OPENWEATHER_API_KEY")
-	if apiKey == "" {
-		logger.Warn("OPENWEATHER_API_KEY not set, API calls will likely fail")
-	}
 
 	// Redis configuration
 	redisPortStr := getEnvOrDefault("REDIS_PORT", "6379")
-	redisPort := 6379 // Default Redis port
+	redisPort := 6379
 	if redisPortStr != "" {
-		port, err := strconv.Atoi(redisPortStr)
-		if err != nil {
-			logger.Warnf("Invalid REDIS_PORT value: %s, using default: %d", redisPortStr, redisPort)
-		} else {
+		if port, err := strconv.Atoi(redisPortStr); err == nil {
 			redisPort = port
 		}
 	}
 
-	redisTTLStr := getEnvOrDefault("REDIS_TTL", "600") // 10 minutes default
+	redisTTLStr := getEnvOrDefault("REDIS_TTL", "600")
 	redisTTL := 600
 	if redisTTLStr != "" {
-		ttl, err := strconv.Atoi(redisTTLStr)
-		if err != nil {
-			logger.Warnf("Invalid REDIS_TTL value: %s, using default: %d", redisTTLStr, redisTTL)
-		} else {
+		if ttl, err := strconv.Atoi(redisTTLStr); err == nil {
 			redisTTL = ttl
 		}
 	}
@@ -113,10 +89,7 @@ func loadConfig() (*Config, error) {
 	redisDB := 0
 	redisDBStr := getEnvOrDefault("REDIS_DB", "0")
 	if redisDBStr != "" {
-		db, err := strconv.Atoi(redisDBStr)
-		if err != nil {
-			logger.Warnf("Invalid REDIS_DB value: %s, using default: %d", redisDBStr, redisDB)
-		} else {
+		if db, err := strconv.Atoi(redisDBStr); err == nil {
 			redisDB = db
 		}
 	}
@@ -145,10 +118,7 @@ func loadConfig() (*Config, error) {
 		},
 	}
 
-	// Log loaded configuration (without sensitive data)
-	logger.Infof("Configuration loaded - Server port: %d, DB host: %s, Redis host: %s",
-		cfg.Server.Port, cfg.Database.Host, cfg.Redis.Host)
-
+	logger.Infof("Configuration loaded - Server port: %d", cfg.Server.Port)
 	return cfg, nil
 }
 
@@ -170,9 +140,6 @@ func MustLoad() *Config {
 func getEnvOrDefault(key, defaultValue string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		if defaultValue != "" {
-			logger.Warnf("%s not set, using default: %s", key, defaultValue)
-		}
 		return defaultValue
 	}
 	return value
