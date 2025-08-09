@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/OmidRasouli/weather-api/internal/configs"
+	"github.com/OmidRasouli/weather-api/config"
 	"github.com/OmidRasouli/weather-api/pkg/logger"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,7 +15,7 @@ func TestConfigWithEnvVars(t *testing.T) {
 
 	// Store original values to restore later
 	originalServerPort := os.Getenv("SERVER_PORT")
-	originalDBHost := os.Getenv("DB_HOST") 
+	originalDBHost := os.Getenv("DB_HOST")
 	originalRedisHost := os.Getenv("REDIS_HOST")
 
 	// Set test environment variables
@@ -23,10 +23,10 @@ func TestConfigWithEnvVars(t *testing.T) {
 	os.Setenv("DB_HOST", "testdb")
 	os.Setenv("REDIS_HOST", "testredis")
 
-	// Clear global config to force reload
-	configs.SetGlobal(nil)
-
-	cfg := configs.MustLoad()
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
 
 	assert.NotNil(t, cfg)
 	assert.Equal(t, 9000, cfg.Server.Port)
@@ -49,7 +49,6 @@ func TestConfigWithEnvVars(t *testing.T) {
 	} else {
 		os.Setenv("REDIS_HOST", originalRedisHost)
 	}
-	configs.SetGlobal(nil)
 }
 
 func TestConfigDefaults(t *testing.T) {
@@ -66,10 +65,10 @@ func TestConfigDefaults(t *testing.T) {
 	os.Unsetenv("DB_HOST")
 	os.Unsetenv("REDIS_HOST")
 
-	// Clear global config to force reload
-	configs.SetGlobal(nil)
-
-	cfg := configs.MustLoad()
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("failed to load config: %v", err)
+	}
 
 	// Test that defaults are set properly
 	assert.Equal(t, 8080, cfg.Server.Port)
@@ -88,5 +87,4 @@ func TestConfigDefaults(t *testing.T) {
 	if originalRedisHost != "" {
 		os.Setenv("REDIS_HOST", originalRedisHost)
 	}
-	configs.SetGlobal(nil)
 }

@@ -3,12 +3,12 @@ package main
 import (
 	"strconv"
 
+	"github.com/OmidRasouli/weather-api/config"
 	_ "github.com/OmidRasouli/weather-api/docs"
 	"github.com/OmidRasouli/weather-api/infrastructure/database"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/postgres"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/redis"
 	"github.com/OmidRasouli/weather-api/internal/application/services"
-	configs "github.com/OmidRasouli/weather-api/internal/configs"
 	databaseMigration "github.com/OmidRasouli/weather-api/internal/database/migrations"
 	postgresRepo "github.com/OmidRasouli/weather-api/internal/infrastructure/database/postgres/weather"
 	"github.com/OmidRasouli/weather-api/internal/infrastructure/openweather"
@@ -20,7 +20,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title           Weather API
+// @title           Weather APIServerPort
 // @version         1.0
 // @description     A RESTful API for weather data management
 // @host            localhost:8080
@@ -29,7 +29,11 @@ import (
 func main() {
 	logger.InitLogger()
 	logger.Info("The application is starting...")
-	cfg := configs.MustLoad()
+	cfg, err := config.Load()
+	if err != nil {
+		logger.Fatalf("failed to load config: %v", err)
+	}
+
 	db, redisClient := RunDatabase(cfg)
 
 	// Handle cleanup when application shuts down
@@ -48,14 +52,14 @@ func main() {
 	validator.Initialize()
 }
 
-func RunServer(cfg *configs.Config, db database.Database, rd database.RedisClient) {
+func RunServer(cfg *config.Config, db database.Database, rd database.RedisClient) {
 	weatherRepo := postgresRepo.NewWeatherPostgresRepository(db)
-	apiClient := openweather.NewClient(cfg.GetOpenWeather().APIKey)
+	apiClient := openweather.NewClient(cfg.OpenWeather.APIKey)
 
 	// Pass Redis client to the weather service
 	weatherService := services.NewWeatherService(weatherRepo, apiClient, rd)
 	weatherController := controller.NewWeatherController(weatherService)
-	r := router.Setup(weatherController, db, rd)
+	r := router.Setup(weatherController, nil, nil, db, rd)
 	port := cfg.Server.Port
 	addr := ":" + strconv.Itoa(port)
 	logger.Infof("Server is starting on port %d", port)
@@ -68,22 +72,23 @@ func RunServer(cfg *configs.Config, db database.Database, rd database.RedisClien
 	}
 }
 
-func RunDatabase(cfg *configs.Config) (database.Database, database.RedisClient) {
+func RunDatabase(cfg *config.Config) (database.Database, database.RedisClient) {
 	// Create a new database connection using the configuration values.
-	db, err := postgres.NewPostgresConnection(postgres.PostgresConfig{
+	dbConfig := postgres.PostgresConfig{
 		Host:     cfg.Database.Host,
-		Port:     "5432", //strconv.Itoa(cfg.Database.Port),
+		Port:     "5432",
 		User:     cfg.Database.User,
 		Password: cfg.Database.Password,
 		DBName:   cfg.Database.DBName,
 		SSLMode:  cfg.Database.SSLMode,
-	})
+	}
+	db, err := postgres.NewPostgresConnection(dbConfig)
 	if err != nil {
 		logger.Errorf("failed to connect to postgres: %v", err)
 	}
 
 	// Initialize Redis client
-	redisClient, err := redis.NewRedisConnection(cfg.GetRedis())
+	redisClient, err := redis.NewRedisConnection(cfg.Redis)
 	if err != nil {
 		logger.Warnf("Failed to connect to Redis: %v. Continuing without caching.", err)
 	}
