@@ -81,15 +81,7 @@ func (wc *WeatherController) FetchAndStore(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// GetByCity godoc
-// @Summary      Get latest weather for a city
-// @Description  Retrieves the most recent weather record for a specific city
-// @Tags         weather
-// @Produce      json
-// @Param        cityName   path      string  true  "City Name"
-// @Success      200  {object}  weather.Weather
-// @Failure      404  {object}  errors.AppError "Weather data not found for the city"
-// @Router       /weather/latest/{cityName} [get]
+// Deprecated: Duplicate of GetLatestByCity. Kept for backward compatibility (no Swagger docs).
 func (wc *WeatherController) GetByCity(c *gin.Context) {
 	city := c.Param("city")
 	if city == "" {

@@ -81,6 +81,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/login": {
+            "post": {
+                "description": "Authenticate user and return a JWT access token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "User login",
+                "parameters": [
+                    {
+                        "description": "Login credentials",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.LoginRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "token response",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "validation error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "invalid credentials",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/weather": {
             "get": {
                 "description": "Retrieves all weather records from the database",
@@ -147,41 +211,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Failed to fetch weather data",
-                        "schema": {
-                            "$ref": "#/definitions/errors.AppError"
-                        }
-                    }
-                }
-            }
-        },
-        "/weather/latest/{cityName}": {
-            "get": {
-                "description": "Retrieves the most recent weather record for a specific city",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "weather"
-                ],
-                "summary": "Get latest weather for a city",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "City Name",
-                        "name": "cityName",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/weather.Weather"
-                        }
-                    },
-                    "404": {
-                        "description": "Weather data not found for the city",
                         "schema": {
                             "$ref": "#/definitions/errors.AppError"
                         }
@@ -395,6 +424,19 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.LoginRequestDTO": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "secret"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "admin"
+                }
+            }
+        },
         "controller.UpdateWeatherRequest": {
             "type": "object",
             "required": [
@@ -491,7 +533,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{"http"},
-	Title:            "Weather API",
+	Title:            "Weather APIServerPort",
 	Description:      "A RESTful API for weather data management",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

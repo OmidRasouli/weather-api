@@ -24,6 +24,15 @@ definitions:
       version:
         type: string
     type: object
+  controller.LoginRequestDTO:
+    properties:
+      password:
+        example: secret
+        type: string
+      username:
+        example: admin
+        type: string
+    type: object
   controller.UpdateWeatherRequest:
     properties:
       city:
@@ -88,7 +97,7 @@ host: localhost:8080
 info:
   contact: {}
   description: A RESTful API for weather data management
-  title: Weather API
+  title: Weather APIServerPort
   version: "1.0"
 paths:
   /health:
@@ -134,6 +143,48 @@ paths:
       summary: Readiness check
       tags:
       - health
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return a JWT access token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.LoginRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token response
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: invalid credentials
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: User login
+      tags:
+      - auth
   /weather:
     get:
       description: Retrieves all weather records from the database
@@ -293,29 +344,6 @@ paths:
           schema:
             $ref: '#/definitions/errors.AppError'
       summary: Get latest weather by city
-      tags:
-      - weather
-  /weather/latest/{cityName}:
-    get:
-      description: Retrieves the most recent weather record for a specific city
-      parameters:
-      - description: City Name
-        in: path
-        name: cityName
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/weather.Weather'
-        "404":
-          description: Weather data not found for the city
-          schema:
-            $ref: '#/definitions/errors.AppError'
-      summary: Get latest weather for a city
       tags:
       - weather
 schemes:
