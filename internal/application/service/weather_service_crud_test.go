@@ -50,9 +50,12 @@ func TestWeatherService_GetWeatherByID(t *testing.T) {
 					WindSpeed:   5.5,
 					FetchedAt:   now,
 				}
+				// Cache miss (return an error to indicate miss), then repo hit, then cache set
+				f.cache.On("Get", a.ctx, a.id.String(), mock.Anything).Return(fmt.Errorf("cache miss"))
 				f.repo.On("FindByID", a.ctx, mock.MatchedBy(func(u string) bool {
 					return u == a.id.String()
 				})).Return(expected, nil)
+				f.cache.On("Set", a.ctx, a.id.String(), mock.Anything, mock.Anything).Return(nil)
 			},
 			wantErr: false,
 			expected: &weather.Weather{
@@ -73,6 +76,8 @@ func TestWeatherService_GetWeatherByID(t *testing.T) {
 				id:  uuid.New(),
 			},
 			setupMock: func(f fields, a args) {
+				// Cache miss (return an error), then repo not found
+				f.cache.On("Get", a.ctx, a.id.String(), mock.Anything).Return(fmt.Errorf("cache miss"))
 				f.repo.On("FindByID", a.ctx, mock.MatchedBy(func(u string) bool {
 					return u == a.id.String()
 				})).Return((*weather.Weather)(nil), fmt.Errorf("not found"))
@@ -112,6 +117,7 @@ func TestWeatherService_GetWeatherByID(t *testing.T) {
 				assert.Equal(t, tt.expected.WindSpeed, got.WindSpeed)
 			}
 			repo.AssertExpectations(t)
+			cache.AssertExpectations(t)
 		})
 	}
 }
