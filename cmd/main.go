@@ -9,6 +9,7 @@ import (
 	"github.com/OmidRasouli/weather-api/infrastructure/database/cache"
 	"github.com/OmidRasouli/weather-api/infrastructure/database/postgres"
 	authUseCase "github.com/OmidRasouli/weather-api/internal/application/auth"
+	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
 	"github.com/OmidRasouli/weather-api/internal/application/service"
 	migration "github.com/OmidRasouli/weather-api/internal/database/migrations"
 	authDomain "github.com/OmidRasouli/weather-api/internal/domain/services"
@@ -54,7 +55,7 @@ func main() {
 	validator.Initialize()
 }
 
-func RunServer(cfg *config.Config, db database.Database, rd cache.RedisClient) {
+func RunServer(cfg *config.Config, db database.Database, rd interfaces.Cache) {
 	weatherRepo := weather.NewWeatherPostgresRepository(db)
 	apiClient := openweather.NewClient(cfg.OpenWeather.APIKey)
 
@@ -77,7 +78,7 @@ func RunServer(cfg *config.Config, db database.Database, rd cache.RedisClient) {
 	}
 }
 
-func RunDatabase(cfg *config.Config) (database.Database, cache.RedisClient) {
+func RunDatabase(cfg *config.Config) (database.Database, interfaces.Cache) {
 	// Create a new database connection using the configuration values.
 	dbConfig := postgres.PostgresConfig{
 		Host:     cfg.Database.Host,

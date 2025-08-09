@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/OmidRasouli/weather-api/infrastructure/database/cache"
 	"github.com/OmidRasouli/weather-api/internal/application/interfaces"
 	"github.com/OmidRasouli/weather-api/internal/domain/weather"
 	"github.com/OmidRasouli/weather-api/pkg/logger"
@@ -16,7 +15,7 @@ import (
 type WeatherService struct {
 	repo       interfaces.WeatherRepository
 	apiClient  interfaces.WeatherAPIClient
-	cache      cache.RedisClient
+	cache      interfaces.Cache
 	timeSource func() time.Time // testable clock
 }
 
@@ -24,7 +23,7 @@ func (s *WeatherService) GetWeather(ctx *gin.Context, param any) (any, any) {
 	panic("unimplemented")
 }
 
-func NewWeatherService(repo interfaces.WeatherRepository, api interfaces.WeatherAPIClient, cache cache.RedisClient) *WeatherService {
+func NewWeatherService(repo interfaces.WeatherRepository, api interfaces.WeatherAPIClient, cache interfaces.Cache) *WeatherService {
 	return &WeatherService{
 		repo:       repo,
 		apiClient:  api,
